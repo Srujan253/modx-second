@@ -1,29 +1,38 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext"; // This will now work
+import axiosInstance from "../api/axiosInstance"; // Make sure this path is correct
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const { login } = useAuth(); // It works because AuthProvider is a parent
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login data:', formData);
-    // Redirect to explore page after login
-    navigate('/explore');
+    setError("");
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.post("/users/login", formData);
+      // Update the global state with the user data from the login response
+      login(response.data.user);
+      navigate("/"); // Redirect to a protected page
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed!");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // The JSX part of your component needs to be present to render the page.
+  // Assuming a similar structure to your signup page.
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <motion.div
@@ -49,12 +58,20 @@ const LoginPage = () => {
           Log In
         </motion.h2>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <p className="text-red-500 text-sm text-center -mt-2 mb-4">
+              {error}
+            </p>
+          )}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
           >
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Email
             </label>
             <input
@@ -73,7 +90,10 @@ const LoginPage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
           >
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Password
             </label>
             <input
@@ -89,11 +109,12 @@ const LoginPage = () => {
           </motion.div>
           <motion.button
             type="submit"
+            disabled={isLoading}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-orange-600 transition duration-200 shadow-lg"
+            className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-orange-600 transition duration-200 shadow-lg disabled:opacity-50"
           >
-            Log In
+            {isLoading ? "Logging in..." : "Log In"}
           </motion.button>
         </form>
         <motion.p
@@ -102,7 +123,10 @@ const LoginPage = () => {
           transition={{ delay: 0.8, duration: 0.5 }}
           className="text-center text-gray-600 dark:text-gray-400 mt-6"
         >
-          Don't have an account? <Link to="/signup" className="text-orange-500 hover:underline">Sign up</Link>
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-orange-500 hover:underline">
+            Sign up
+          </Link>
         </motion.p>
       </motion.div>
     </div>
