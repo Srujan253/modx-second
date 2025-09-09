@@ -14,7 +14,9 @@ const MyTaskPanel = ({ projectId }) => {
       setLoading(true);
       try {
         const res = await axiosInstance.get(`/project/${projectId}/tasks`);
-        const allTasks = Array.isArray(res.data) ? res.data : res.data.tasks || [];
+        const allTasks = Array.isArray(res.data)
+          ? res.data
+          : res.data.tasks || [];
         setTasks(allTasks.filter((t) => t.assigned_to === user.id));
       } catch (err) {
         setError("Failed to fetch tasks");

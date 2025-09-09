@@ -7,8 +7,8 @@ exports.getProjectMembers = async (req, res) => {
       `SELECT u.id, u.full_name, u.email, pm.role, pm.status
        FROM project_members pm
        JOIN users u ON pm.member_id = u.id
-       WHERE pm.project_id = $1 AND pm.status = 'accepted'`
-      , [projectId]
+       WHERE pm.project_id = $1 AND pm.status = 'accepted'`,
+      [projectId]
     );
     res.status(200).json({ success: true, members: members.rows });
   } catch (error) {
