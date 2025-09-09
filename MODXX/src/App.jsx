@@ -1,3 +1,4 @@
+import ProjectTask from "./pages/ProjectTask";
 import ProjectMessagesList from "./pages/ProjectMessagesList";
 import ProjectMessages from "./pages/ProjectMessages";
 import ApplyJoinSystem from "./pages/ApplyJoinSystem";
@@ -70,6 +71,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <ProjectDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/project/:projectId/tasks"
+              element={
+                <ProtectedRoute>
+                  <ProjectTask />
                 </ProtectedRoute>
               }
             />

@@ -1,3 +1,4 @@
+// Get all accepted members of a project (for task assignment, etc.)
 const express = require("express");
 const router = express.Router();
 const projectController = require("../controller/projectController");
@@ -5,6 +6,7 @@ const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/multerMiddleware");
 
 // Explore projects (public, with filters)
+router.get("/:projectId/members", protect, projectController.getProjectMembers);
 router.get("/explore", protect, projectController.exploreProjects);
 router.get("/public/:projectId", projectController.getProjectDetailsPublic);
 

@@ -1,3 +1,21 @@
+// Get all accepted members (and their roles) of a project
+exports.getProjectMembers = async (req, res) => {
+  const { projectId } = req.params;
+  try {
+    // Only accepted members, mentors, and leader
+    const members = await pool.query(
+      `SELECT u.id, u.full_name, u.email, pm.role, pm.status
+       FROM project_members pm
+       JOIN users u ON pm.member_id = u.id
+       WHERE pm.project_id = $1 AND pm.status = 'accepted'`
+      , [projectId]
+    );
+    res.status(200).json({ success: true, members: members.rows });
+  } catch (error) {
+    console.error("Error fetching project members:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 // Get all project invitations for the logged-in user (status: 'invited')
 exports.getUserInvites = async (req, res) => {
   const userId = req.user.id;

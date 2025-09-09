@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Star, User, Users } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import MyTaskPanel from "../components/MyTaskPanel";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
@@ -118,75 +119,85 @@ const ProjectDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-8 flex flex-col md:flex-row gap-8">
-      {/* Pending Requests Sidebar for Leader */}
+      {/* Leftmost: Leader button to Task Management */}
       {isLeader && (
-        <div className="w-full md:w-80 bg-gray-800 rounded-lg shadow-inner p-4 overflow-y-auto max-h-[80vh] mb-8 md:mb-0">
-          <h3 className="text-xl font-bold text-orange-400 mb-4">
-            Pending Join Requests
-          </h3>
-          {requestsLoading ? (
-            <div className="text-gray-400">Loading requests...</div>
-          ) : pendingRequests.length === 0 ? (
-            <div className="text-gray-500">No pending requests.</div>
-          ) : (
-            <ul className="space-y-3">
-              {pendingRequests.map((req) => (
-                <li
-                  key={req.id}
-                  className="bg-gray-700 rounded p-3 flex flex-col gap-2"
-                >
-                  <span className="font-semibold text-white">
-                    {req.full_name}
-                  </span>
-                  <span className="text-gray-400 text-xs">{req.email}</span>
-                  <span className="text-gray-500 text-xs mt-1">
-                    Status: {req.status}
-                  </span>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-semibold"
-                      onClick={async () => {
-                        try {
-                          await axios.post(
-                            `${API_URL}/project/${projectId}/requests/${req.id}/accept`,
-                            {},
-                            { withCredentials: true }
-                          );
-                          toast.success("Request accepted and member added.");
-                          setPendingRequests((prev) =>
-                            prev.filter((r) => r.id !== req.id)
-                          );
-                        } catch (err) {
-                          toast.error("Failed to accept request.");
-                        }
-                      }}
-                    >
-                      Accept
-                    </button>
-                    <button
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded font-semibold"
-                      onClick={async () => {
-                        try {
-                          await axios.delete(
-                            `${API_URL}/project/${projectId}/requests/${req.id}`,
-                            { withCredentials: true }
-                          );
-                          toast.info("Request rejected and removed.");
-                          setPendingRequests((prev) =>
-                            prev.filter((r) => r.id !== req.id)
-                          );
-                        } catch (err) {
-                          toast.error("Failed to reject request.");
-                        }
-                      }}
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="w-full md:w-60 flex flex-col gap-4 mb-8 md:mb-0">
+          <button
+            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg shadow mb-4"
+            onClick={() =>
+              (window.location.href = `/project/${projectId}/tasks`)
+            }
+          >
+            Go to Task Management
+          </button>
+          <div className="bg-gray-800 rounded-lg shadow-inner p-4 overflow-y-auto max-h-[40vh]">
+            <h3 className="text-xl font-bold text-orange-400 mb-4">
+              Pending Join Requests
+            </h3>
+            {requestsLoading ? (
+              <div className="text-gray-400">Loading requests...</div>
+            ) : pendingRequests.length === 0 ? (
+              <div className="text-gray-500">No pending requests.</div>
+            ) : (
+              <ul className="space-y-3">
+                {pendingRequests.map((req) => (
+                  <li
+                    key={req.id}
+                    className="bg-gray-700 rounded p-3 flex flex-col gap-2"
+                  >
+                    <span className="font-semibold text-white">
+                      {req.full_name}
+                    </span>
+                    <span className="text-gray-400 text-xs">{req.email}</span>
+                    <span className="text-gray-500 text-xs mt-1">
+                      Status: {req.status}
+                    </span>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-semibold"
+                        onClick={async () => {
+                          try {
+                            await axios.post(
+                              `${API_URL}/project/${projectId}/requests/${req.id}/accept`,
+                              {},
+                              { withCredentials: true }
+                            );
+                            toast.success("Request accepted and member added.");
+                            setPendingRequests((prev) =>
+                              prev.filter((r) => r.id !== req.id)
+                            );
+                          } catch (err) {
+                            toast.error("Failed to accept request.");
+                          }
+                        }}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded font-semibold"
+                        onClick={async () => {
+                          try {
+                            await axios.delete(
+                              `${API_URL}/project/${projectId}/requests/${req.id}`,
+                              { withCredentials: true }
+                            );
+                            toast.info("Request rejected and removed.");
+                            setPendingRequests((prev) =>
+                              prev.filter((r) => r.id !== req.id)
+                            );
+                          } catch (err) {
+                            toast.error("Failed to reject request.");
+                          }
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
       {/* Main Project Details */}
@@ -270,6 +281,14 @@ const ProjectDetails = () => {
           </div>
         )}
       </div>
+      {/* Right-side: If not leader, show MyTaskPanel for assigned tasks */}
+      {!isLeader && (
+        <div className="w-full md:w-80">
+          <div className="bg-gray-800 rounded-lg shadow-inner p-4 overflow-y-auto max-h-[60vh] w-full">
+            <MyTaskPanel projectId={projectId} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
