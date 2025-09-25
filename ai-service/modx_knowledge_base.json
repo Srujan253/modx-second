@@ -1,0 +1,77 @@
+[
+  {
+    "title": "Introduction to MoDX",
+    "content": "MoDX is a next-generation collaborative platform designed to bridge the gap between ideas and execution. It connects students, professionals, and innovators from diverse disciplines to work on meaningful, real-world projects. By combining complementary skills and perspectives, MoDX fosters an ecosystem where creativity, technical expertise, and mentorship converge to deliver impactful innovations. MoDX supports projects across technology, business, design, and social innovation, creating a holistic environment for interdisciplinary collaboration.",
+    "tags": ["overview", "platform", "introduction"]
+  },
+  {
+    "title": "Mission",
+    "content": "MoDX aims to unlock interdisciplinary collaboration by creating a structured environment where users can transform ideas into projects, connect with talented individuals, gain verifiable experience, and learn from experienced mentors. Innovation happens at the intersection of different skills, and MoDX facilitates these intersections. Our mission is to empower individuals to build, learn, and grow while creating a positive impact on society.",
+    "tags": ["mission", "goals", "collaboration"]
+  },
+  {
+    "title": "What is MoDX",
+    "content": "MoDX, short for Modular Disciplinary Exchange, is a dynamic ecosystem for collaborative innovation. It brings together Project Leaders, Contributors, and Mentors to work on projects ranging from hackathons to startups. MoDX provides tools, mentorship, and workflows to transform ideas into actionable results. Projects can range from short-term initiatives to long-term ventures, providing flexibility for all users.",
+    "tags": ["platform", "users", "ecosystem"]
+  },
+  {
+    "title": "For Project Leaders",
+    "content": "Project Leaders use MoDX to design, build, and manage projects. They create projects with titles, descriptions, goals, and required skills. MoDX's AI Dream Team Builder suggests compatible team members and mentors. Leaders review applications, assemble teams, and collaborate using an integrated workspace with chat, Kanban boards, and file storage. Leaders are responsible for clear communication, providing timely feedback, and ensuring contributors are recognized for their work through Verifiable Credentials.",
+    "tags": ["project_leaders", "team_building", "workflow"]
+  },
+  {
+    "title": "For Contributors",
+    "content": "Contributors build professional profiles showcasing skills, interests, and experience. They discover projects using advanced filters and AI recommendations, apply to join teams, and contribute using MoDX's collaboration tools. Completing projects grants XP to level up their gamified skill tree and earn Verifiable Credentials. Contributors are expected to actively participate, meet deadlines, and maintain professionalism in all interactions.",
+    "tags": ["contributors", "portfolio", "skill_growth"]
+  },
+  {
+    "title": "For Mentors",
+    "content": "Mentors create profiles detailing expertise, professional experience, and mentorship style. They are discoverable in the Mentorship Marketplace and receive AI recommendations for projects matching their skills. Mentors guide teams, provide constructive feedback, and help overcome challenges. Mentors build a reputation based on ratings and reviews, which enhances their visibility and credibility within the community.",
+    "tags": ["mentors", "guidance", "expertise"]
+  },
+  {
+    "title": "Core Features",
+    "content": "MoDX offers a variety of features to facilitate collaboration and growth, including: AI Dream Team Builder for team suggestions, Integrated Collaboration Suite with chat, Kanban task boards, and shared file storage, Gamified Skill Tree for tracking skills and earning XP, Dynamic Mentorship Marketplace for discovering and connecting with mentors, and secure Verifiable Credentials for proof of contribution. The platform is designed to support both individual growth and team success.",
+    "tags": ["features", "AI", "collaboration", "skill_tree"]
+  },
+  {
+    "title": "Reputation System",
+    "content": "MoDX uses Verifiable Credentials (VCs) to provide secure, tamper-proof proof of contribution and skills. Project Leaders issue VCs to team members upon project completion. Team members can endorse each other for specific skills. These credentials are stored securely, can be shared with future employers, and enhance trust, authenticity, and professional credibility.",
+    "tags": ["reputation", "VCs", "trust", "verification"]
+  },
+  {
+    "title": "Platform Rules & Code of Conduct",
+    "content": "MoDX is a professional community that expects all users to adhere to the following rules: \n1. Be Respectful: No harassment, discrimination, or hate speech.\n2. Originality: Only post original work or with proper permissions.\n3. No Spam: Avoid unsolicited promotion or advertising.\n4. Confidentiality: Respect the privacy of project details and team discussions.\n5. Professionalism: Communicate constructively, meet deadlines, and provide honest feedback.\n6. Security: Do not share login credentials or attempt to compromise the platform or other users' accounts.\n7. Community Engagement: Support fellow users, encourage collaboration, and maintain a positive environment.\nViolations may result in temporary or permanent bans.",
+    "tags": ["rules", "conduct", "policy"]
+  },
+  {
+    "title": "Project & Mentorship Policies",
+    "content": "Project Leaders must define clear goals, communicate regularly, and fairly issue Proof of Contribution credentials. Contributors should apply only to projects they can meaningfully contribute to, actively participate, and communicate professionally. Mentors must provide accurate guidance, maintain professional conduct, and represent their skills honestly. All users are expected to comply with platform rules and foster a collaborative environment.",
+    "tags": ["policies", "guidelines", "mentorship"]
+  },
+  {
+    "title": "Privacy Policy",
+    "content": "MoDX collects registration data, profile information, and platform activity data. This data is used for project matching, AI recommendations, and platform functionality. Personal data is never sold to third parties. Verifiable Credentials are securely stored, and users have full control over sharing permissions. The platform also implements standard security measures to protect user data.",
+    "tags": ["privacy", "data_protection", "security"]
+  },
+  {
+    "title": "FAQ",
+    "content": "MoDX is free to use. Any registered user can create a project, becoming a Project Leader automatically. Verifiable Credentials are secure, cryptographically signed digital certificates proving skills and contributions. Professionals can apply to become mentors, which is reviewed by the MoDX admin team. Projects can vary in duration and complexity, and the platform supports both short-term and long-term collaborations.",
+    "tags": ["faq", "questions", "credentials"]
+  },
+  {
+    "title": "Project Types",
+    "content": "MoDX supports multiple project types including hackathons, startups, research initiatives, social impact projects, and long-term ventures. Users can filter projects by type, skill requirements, and duration to find the best fit. Leaders can set milestones and deadlines, while contributors can track progress and gain XP in their skill tree.",
+    "tags": ["project_types", "categories", "collaboration"]
+  },
+  {
+    "title": "Collaboration Expectations",
+    "content": "All team members are expected to communicate openly, share responsibilities, meet deadlines, and provide constructive feedback. Leaders must facilitate collaboration and maintain a positive team environment. Contributors and mentors should respect schedules, respond promptly, and document their work effectively. Active participation is required to earn Verifiable Credentials and XP.",
+    "tags": ["collaboration", "expectations", "teamwork"]
+  },
+  {
+    "title": "Security & Safety Guidelines",
+    "content": "Users must not attempt to hack or bypass platform security. Sharing login credentials is strictly prohibited. Project information and user data must be kept confidential. Report any suspicious activity to MoDX administrators. The platform implements encryption and secure storage to protect user contributions and Verifiable Credentials.",
+    "tags": ["security", "safety", "guidelines"]
+  }
+]

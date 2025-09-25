@@ -34,8 +34,8 @@ app.use("/api/v1/project", require("./routes/projectRoutes"));
 app.use("/api/v1/project", require("./routes/taskRoutes"));
 
 // Gemini API route
-const geminiRoutes = require("./routes/geminiRoutes");
-app.use("/api/v1/gemini", geminiRoutes);
+const aiRoutes = require("./routes/geminiRoutes");
+app.use("/api/v1/ai", aiRoutes);
 
 const messageRoutes = require("./routes/messageRoutes");
 app.use("/api/v1/messages", messageRoutes);

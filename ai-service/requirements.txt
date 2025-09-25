@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-dotenv
+google-generativeai
+sentence-transformers
+chromadb
+psycopg2-binary  # For connecting to PostgreSQL
+beautifulsoup4
+requests

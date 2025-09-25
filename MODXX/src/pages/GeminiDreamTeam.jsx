@@ -1,120 +1,147 @@
-// File: src/components/GeminiDreamTeam.jsx
-import React, { useState } from "react";
-import axiosInstance from "../api/axiosInstance";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import apiClient from "../api/axiosInstance"; // Use your central API client
+import { motion, AnimatePresence } from "framer-motion";
+import { Send, Bot, User, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import toast from "react-hot-toast";
 
 const EXAMPLES = [
-  {
-    label: "Web App for Student Collaboration",
-    prompt:
-      "I want to build a web app for students to collaborate on projects. The app should allow chat, file sharing, and project management. I need roles like frontend, backend, and UI/UX designer.",
-  },
-  {
-    label: "AI-powered Resume Builder",
-    prompt:
-      "I'm planning an AI-powered resume builder. The team should have AI/ML engineers, a product manager, and a React developer. Suggest ideal roles and skills.",
-  },
-  {
-    label: "Healthcare Appointment System",
-    prompt:
-      "A healthcare appointment system for clinics. I need a backend developer, a frontend developer, and someone with healthcare domain knowledge.",
-  },
+  "What are the rules for creating a project?",
+  "Find projects related to healthcare technology.",
+  "What skills do I need for a Web3 project?",
 ];
 
-const SYSTEM_PROMPT = `You are "Dream Team AI", an expert project team builder. 
-Given a project idea, analyze the requirements and suggest the ideal roles, skills, 
-and 3-5 best-matched team members or mentors. Respond in a clear, structured format.`;
+const MODXChat = () => {
+  const [messages, setMessages] = useState([
+    {
+      role: "model",
+      content:
+        "Hello! I'm MentorBot, your AI guide for the MoDX platform. How can I help you today?",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
-const GeminiDreamTeam = () => {
-  const [userPrompt, setUserPrompt] = useState("");
-  const [response, setResponse] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-
-  const handleExample = (prompt) => {
-    setUserPrompt(prompt);
-    setResponse("");
-    setError("");
-  };
+  // Effect to scroll to the latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setResponse("");
-    setError("");
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setInput("");
+
     try {
-      const { data } = await axiosInstance.post("/gemini/generate", {
-        systemPrompt: SYSTEM_PROMPT,
-        userPrompt,
+      // --- API CALL ---
+      // Send the user's raw query to your intelligent backend
+      const { data } = await apiClient.post("/ai/chat", {
+        query: input,
       });
-      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-        setResponse(data.candidates[0].content.parts[0].text);
-      } else {
-        setError("No response from AI. Try again.");
-      }
+
+      const modelMessage = { role: "model", content: data.answer };
+      setMessages((prev) => [...prev, modelMessage]);
     } catch (err) {
-      setError("Error contacting Gemini API.");
+      toast.error("Error contacting the AI Mentor. Please try again.");
+      // Add an error message to the chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "model",
+          content: "Sorry, I seem to be having some trouble right now.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white py-16 px-4 flex flex-col items-center">
-      <div className="w-full max-w-2xl bg-gray-800 rounded-lg shadow-lg p-8">
-        <h1 className="text-3xl font-bold mb-4 text-orange-400">
-          AI-Powered 'Dream Team' Builder
-        </h1>
-        <p className="mb-6 text-gray-300">
-          Describe your project idea. The AI will suggest ideal roles, skills,
-          and a dream team for you!
-        </p>
-        <div className="mb-4">
-          <span className="font-semibold text-gray-200">Examples:</span>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {EXAMPLES.map((ex) => (
-              <button
-                key={ex.label}
-                className="bg-gray-700 hover:bg-orange-500 text-sm px-3 py-1 rounded transition"
-                onClick={() => handleExample(ex.prompt)}
+    <div className="flex flex-col h-[70vh] max-w-2xl mx-auto bg-base-100 dark:bg-slate-800 rounded-2xl shadow-2xl border border-base-300 dark:border-slate-700">
+      <div className="p-4 border-b dark:border-slate-700 flex items-center gap-3 justify-center">
+        <Sparkles className="w-6 h-6 text-primary" />
+        <h2 className="text-xl font-bold text-base-content">AI Mentor</h2>
+      </div>
+
+      <div className="flex-1 p-4 overflow-y-auto space-y-6">
+        <AnimatePresence>
+          {messages.map((msg, index) => (
+            <motion.div
+              key={index}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex items-start gap-3 ${
+                msg.role === "user" ? "justify-end" : ""
+              }`}
+            >
+              {msg.role === "model" && (
+                <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-content">
+                  <Bot size={20} />
+                </div>
+              )}
+              <div
+                className={`prose dark:prose-invert max-w-[85%] px-4 py-2 rounded-xl ${
+                  msg.role === "user"
+                    ? "bg-blue-500 text-white"
+                    : "bg-base-200 dark:bg-slate-700"
+                }`}
               >
-                {ex.label}
-              </button>
-            ))}
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              </div>
+              {msg.role === "user" && (
+                <div className="flex-shrink-0 w-8 h-8 bg-slate-500 rounded-full flex items-center justify-center text-white">
+                  <User size={20} />
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {isLoading && (
+          <div className="flex justify-start">
+            <span className="loading loading-dots loading-md text-slate-500"></span>
           </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="p-4 border-t dark:border-slate-700">
+        <div className="flex flex-wrap gap-2 mb-2">
+          {EXAMPLES.map((ex, i) => (
+            <button
+              key={i}
+              onClick={() => setInput(ex)}
+              className="btn btn-xs btn-ghost"
+            >
+              "{ex}"
+            </button>
+          ))}
         </div>
-        <form onSubmit={handleSubmit} className="mb-4">
-          <textarea
-            className="w-full p-3 rounded bg-gray-900 text-white border border-gray-700 focus:border-orange-400 mb-2"
-            rows={4}
-            placeholder="Describe your project idea..."
-            value={userPrompt}
-            onChange={(e) => setUserPrompt(e.target.value)}
-            required
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask about projects, skills, or platform rules..."
+            className="input input-bordered w-full"
+            disabled={isLoading}
           />
           <button
             type="submit"
-            className="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded font-semibold text-white disabled:opacity-60"
-            disabled={loading || !userPrompt.trim()}
+            className="btn btn-primary btn-square"
+            disabled={isLoading || !input.trim()}
           >
-            {loading ? "Generating..." : "Generate Dream Team"}
+            <Send size={20} />
           </button>
         </form>
-        {error && <div className="text-red-400 mb-2">{error}</div>}
-        {response && (
-          <div className="bg-gray-900 p-4 rounded mt-4 whitespace-pre-wrap text-green-300 border border-gray-700">
-            {response}
-          </div>
-        )}
       </div>
-      <button
-        className="mt-8 text-orange-400 hover:underline"
-        onClick={() => navigate(-1)}
-      >
-        ← Back to Features
-      </button>
     </div>
   );
 };
 
-export default GeminiDreamTeam;
+export default MODXChat;
