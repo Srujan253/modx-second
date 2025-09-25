@@ -61,11 +61,11 @@ const Features = () => {
         },
         {
           icon: Users,
-          title: "Apply & Join System",
+          title: "Find and Invite Members",
           description:
-            "A formal workflow for managing applications to join a project. Users click an 'Apply to Join' button on a project. The project leader receives a notification and can view the applicant's profile and skill tree to decide whether to accept or decline them into the team.",
+            "An intelligent member discovery and invitation system for building your dream team. Project leaders can search and filter through user profiles, review skill trees and portfolios, then send personalized invitations to the most suitable candidates. Recipients can accept or decline invitations, streamlining the team formation process.",
           action: () => navigate("/apply-join-system"),
-          actionLabel: "Go to Apply & Join System",
+          actionLabel: "Find Team Members",
         },
       ],
     },

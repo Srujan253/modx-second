@@ -66,6 +66,12 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+            {/* Public Project Details Route (for exploration) */}
+            <Route
+              path="/project/public/:projectId"
+              element={<ProjectDetails />}
+            />
+            {/* Protected Project Details Route (for members) */}
             <Route
               path="/project/:projectId"
               element={

@@ -8,6 +8,12 @@ import {
   LogOut,
   LayoutDashboard,
   MessageSquare,
+  Home,
+  Zap,
+  Info,
+  Plus,
+  Search,
+  Compass
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext"; // <-- Import the real useAuth hook
 
@@ -50,9 +56,19 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/features", label: "Features" },
-    { href: "/about", label: "About" },
+    { href: "/", label: "Home", icon: Home },
+    { href: "/features", label: "Features", icon: Zap },
+    { href: "/about", label: "About", icon: Info },
+  ];
+
+  // Split nav links for left and right of center button
+  const leftNavLinks = [
+    { href: "/", label: "Home", icon: Home },
+  ];
+
+  const rightNavLinks = [
+    { href: "/features", label: "Features", icon: Zap },
+    { href: "/about", label: "About", icon: Info },
   ];
 
   // Render a placeholder while the app checks for a logged-in user to prevent flickering
@@ -63,9 +79,9 @@ const Navbar = () => {
   return (
     <nav className="bg-gray-900 shadow-lg fixed top-0 w-full z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          {/* Left Side: Logo */}
-          <div className="flex items-center">
+        <div className="flex items-center justify-center h-16 relative">
+          {/* Logo - Positioned absolutely on the left */}
+          <div className="absolute left-0 flex items-center">
             <Link to="/">
               <motion.h1
                 initial={{ opacity: 0 }}
@@ -75,31 +91,82 @@ const Navbar = () => {
                 MODX
               </motion.h1>
             </Link>
-            <div className="flex items-center space-x-6 ml-8">
-              <Link
-                to="/features"
-                className="text-gray-300 hover:text-orange-500 transition duration-200 font-medium"
-              >
-                Features
-              </Link>
+          </div>
 
+          {/* Center Navigation: Home | Explore | + | Features | About */}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Left side links */}
+            {leftNavLinks.map((link) => {
+              const IconComponent = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-orange-500 hover:bg-gray-800/50 rounded-lg transition-all duration-200 font-medium"
+                >
+                  <IconComponent size={16} />
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            {/* Explore Link for logged in users */}
+            {isLoggedIn && (
               <Link
-                to="/about"
-                className="text-gray-300 hover:text-orange-500 transition duration-200 font-medium"
+                to="/explore"
+                className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-orange-500 hover:bg-gray-800/50 rounded-lg transition-all duration-200 font-medium"
               >
-                About
+                <Compass size={16} />
+                Explore
               </Link>
-            </div>
+            )}
+
+            {/* Center Create Button */}
+            {isLoggedIn && (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="mx-4"
+              >
+                <Link
+                  to="/project/create"
+                  className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+                  title="Create New Project"
+                >
+                  <Plus size={22} />
+                </Link>
+              </motion.div>
+            )}
+
+            {/* Right side links */}
+            {rightNavLinks.map((link) => {
+              const IconComponent = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-orange-500 hover:bg-gray-800/50 rounded-lg transition-all duration-200 font-medium"
+                >
+                  <IconComponent size={16} />
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right Side: User Menu / Auth Buttons - Positioned absolutely on the right */}
+          <div className="absolute right-0 flex items-center">
             {isLoggedIn ? (
               // --- Logged In View ---
-              <div ref={dropdownRef} className="ml-4">
+              <div ref={dropdownRef} className="relative">
                 <motion.button
                   onClick={toggleDropdown}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2"
                 >
                   <img
-                    className="h-9 w-9 rounded-full object-cover border-2 border-orange-500"
+                    className="h-9 w-9 rounded-full object-cover border-2 border-orange-500/50 hover:border-orange-500 transition-colors"
                     src={`https://ui-avatars.com/api/?name=${
                       user?.full_name?.replace(" ", "+") || "User"
                     }&background=222&color=FFF`}
@@ -122,13 +189,13 @@ const Navbar = () => {
                       </div>
                       <Link
                         to="/dashboard"
-                        className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                        className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-orange-500 transition-colors"
                       >
                         <LayoutDashboard size={16} className="mr-3" /> Dashboard
                       </Link>
                       <Link
                         to="/profile"
-                        className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                        className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-orange-500 transition-colors"
                       >
                         <User size={16} className="mr-3" /> Profile
                       </Link>
@@ -138,14 +205,23 @@ const Navbar = () => {
                             ? `/project-messages/${user.current_project_id}`
                             : "/project-messages"
                         }
-                        className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                        className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-orange-500 transition-colors"
                       >
                         <MessageSquare size={16} className="mr-3" /> Messages
                       </Link>
+                      
+                      {/* Mobile Create Project Button */}
+                      <Link
+                        to="/project/create"
+                        className="md:hidden flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-orange-500 transition-colors"
+                      >
+                        <Plus size={16} className="mr-3" /> Create Project
+                      </Link>
+                      
                       <div className="border-t border-gray-700 my-1"></div>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left flex items-center px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
+                        className="w-full text-left flex items-center px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
                       >
                         <LogOut size={16} className="mr-3" /> Logout
                       </button>
@@ -158,28 +234,28 @@ const Navbar = () => {
               <div className="flex items-center space-x-4">
                 <Link
                   to="/login"
-                  className="text-gray-300 hover:text-orange-500 transition duration-200"
+                  className="text-gray-300 hover:text-orange-500 transition duration-200 font-medium"
                 >
                   Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-orange-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-orange-600 transition duration-200"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Signup
                 </Link>
               </div>
             )}
-          </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <motion.button
-              onClick={toggleMobileMenu}
-              className="p-2 rounded-md text-gray-300"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </motion.button>
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center ml-4">
+              <motion.button
+                onClick={toggleMobileMenu}
+                className="p-2 rounded-md text-gray-300 hover:text-orange-500 transition-colors"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
@@ -194,34 +270,131 @@ const Navbar = () => {
             className="md:hidden bg-gray-900 border-t border-gray-700"
           >
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navLinks.map((link) => (
+              {/* Home Link */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0 * 0.1 }}
+              >
                 <Link
-                  key={link.href}
-                  to={link.href}
-                  className="block px-3 py-2 text-gray-300 hover:text-orange-500"
+                  to="/"
+                  className={`${
+                    location.pathname === "/" 
+                      ? "bg-gray-700 text-orange-500" 
+                      : "text-gray-300 hover:bg-gray-700 hover:text-orange-500"
+                  } group flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors`}
+                  onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {link.label}
+                  <Home size={20} className="mr-3" />
+                  Home
                 </Link>
-              ))}
+              </motion.div>
+
+              {/* Explore Link for logged in users */}
+              {isLoggedIn && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1 * 0.1 }}
+                >
+                  <Link
+                    to="/explore"
+                    className={`${
+                      location.pathname === "/explore" 
+                        ? "bg-gray-700 text-orange-500" 
+                        : "text-gray-300 hover:bg-gray-700 hover:text-orange-500"
+                    } group flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Compass size={20} className="mr-3" />
+                    Explore
+                  </Link>
+                </motion.div>
+              )}
+
+              {/* Mobile Create Project Button */}
+              {isLoggedIn && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 2 * 0.1 }}
+                  className="pt-2"
+                >
+                  <Link
+                    to="/project/create"
+                    className="group flex items-center px-3 py-2 rounded-md text-base font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Plus size={20} className="mr-3" />
+                    Create Project
+                  </Link>
+                </motion.div>
+              )}
+
+              {/* Features Link */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 3 * 0.1 }}
+              >
+                <Link
+                  to="/features"
+                  className={`${
+                    location.pathname === "/features" 
+                      ? "bg-gray-700 text-orange-500" 
+                      : "text-gray-300 hover:bg-gray-700 hover:text-orange-500"
+                  } group flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Zap size={20} className="mr-3" />
+                  Features
+                </Link>
+              </motion.div>
+
+              {/* About Link */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 4 * 0.1 }}
+              >
+                <Link
+                  to="/about"
+                  className={`${
+                    location.pathname === "/about" 
+                      ? "bg-gray-700 text-orange-500" 
+                      : "text-gray-300 hover:bg-gray-700 hover:text-orange-500"
+                  } group flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Info size={20} className="mr-3" />
+                  About
+                </Link>
+              </motion.div>
+              
               <div className="border-t border-gray-700 my-2"></div>
               {isLoggedIn ? (
                 <>
                   <Link
                     to="/profile"
-                    className="block px-3 py-2 text-gray-300 hover:text-orange-500"
+                    className="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-orange-500 rounded-md transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
+                    <User size={16} className="mr-3" />
                     Profile
                   </Link>
                   <Link
                     to="/dashboard"
-                    className="block px-3 py-2 text-gray-300 hover:text-orange-500"
+                    className="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-orange-500 rounded-md transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
+                    <LayoutDashboard size={16} className="mr-3" />
                     Dashboard
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left block px-3 py-2 text-red-400 hover:text-orange-500"
+                    className="w-full text-left flex items-center px-3 py-2 text-red-400 hover:bg-gray-700 rounded-md transition-colors"
                   >
+                    <LogOut size={16} className="mr-3" />
                     Logout
                   </button>
                 </>
@@ -229,13 +402,15 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/login"
-                    className="block px-3 py-2 text-gray-300 hover:text-orange-500"
+                    className="block px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-orange-500 rounded-md transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
-                    className="block px-3 py-2 text-gray-300 hover:text-orange-500"
+                    className="block px-3 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 rounded-md transition-all duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Signup
                   </Link>

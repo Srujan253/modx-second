@@ -832,3 +832,66 @@ exports.getUserProjects = async (req, res) => {
     res.status(500).json({ message: "Server error fetching user projects." });
   }
 };
+
+// Apply to join a project
+exports.applyToProject = async (req, res) => {
+  const { projectId } = req.params;
+  const userId = req.user.id;
+  
+  try {
+    // Check if user is already a member or has pending request
+    const existingMembership = await pool.query(
+      "SELECT * FROM project_members WHERE project_id = $1 AND member_id = $2",
+      [projectId, userId]
+    );
+
+    if (existingMembership.rows.length > 0) {
+      const status = existingMembership.rows[0].status;
+      if (status === 'accepted') {
+        return res.status(400).json({ message: "You are already a member of this project." });
+      } else if (status === 'pending') {
+        return res.status(400).json({ message: "You have already applied to this project." });
+      }
+    }
+
+    // Check if project exists and get project details
+    const project = await pool.query(
+      "SELECT * FROM projects WHERE id = $1",
+      [projectId]
+    );
+
+    if (project.rows.length === 0) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+
+    // Check if user is the project leader
+    if (project.rows[0].leader_id === userId) {
+      return res.status(400).json({ message: "You cannot apply to your own project." });
+    }
+
+    // Check if project has reached max members
+    const currentMembers = await pool.query(
+      "SELECT COUNT(*) as member_count FROM project_members WHERE project_id = $1 AND status = 'accepted'",
+      [projectId]
+    );
+
+    const memberCount = parseInt(currentMembers.rows[0].member_count);
+    if (memberCount >= project.rows[0].max_members) {
+      return res.status(400).json({ message: "This project has reached its maximum number of members." });
+    }
+
+    // Insert the application with 'pending' status
+    await pool.query(
+      "INSERT INTO project_members (project_id, member_id, role, status) VALUES ($1, $2, $3, $4)",
+      [projectId, userId, 'member', 'pending']
+    );
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Application submitted successfully! The project leader will review your request." 
+    });
+  } catch (error) {
+    console.error("Error applying to project:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
