@@ -25,6 +25,19 @@ import {
 import { toast } from "react-toastify";
 
 const ProjectTask = () => {
+  // Remove member handler (for leader)
+  const handleRemoveMember = async (memberId) => {
+    if (!window.confirm("Are you sure you want to remove this member?")) return;
+    try {
+      await axiosInstance.delete(`/project/${projectId}/members/${memberId}`);
+      toast.success("Member removed");
+      // Refresh members
+      const res = await axiosInstance.get(`/project/${projectId}/members`);
+      setMembers(res.data.members || []);
+    } catch (err) {
+      toast.error("Failed to remove member");
+    }
+  };
   // ...existing code...
 
   // Edit and delete handlers for tasks
@@ -351,13 +364,22 @@ const ProjectTask = () => {
                           <div className="flex flex-col items-center text-center">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center mb-4 shadow-lg group-hover:shadow-orange-500/25 transition-shadow">
                               <span className="text-white font-bold text-lg">
-                                {member.name?.charAt(0) || "U"}
+                                {member.full_name?.charAt(0) || "U"}
                               </span>
                             </div>
 
                             <h3 className="text-lg font-bold text-white mb-1 group-hover:text-orange-400 transition-colors">
-                              {member.name || "Unknown User"}
+                              {member.full_name || "Unknown User"}
                             </h3>
+                            {/* Remove button for leader, not for leader member */}
+                            {isLeaderOrMentor && myRole === "leader" && member.role !== "leader" && (
+                              <button
+                                className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold"
+                                onClick={() => handleRemoveMember(member.id)}
+                              >
+                                Remove
+                              </button>
+                            )}
 
                             <div
                               className={`flex items-center gap-1 px-3 py-1 rounded-full bg-gray-800/50 ${getRoleColor(

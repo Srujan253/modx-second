@@ -1,3 +1,5 @@
+// Remove a member from a project (leader only)
+
 const express = require("express");
 const router = express.Router();
 const projectController = require("../controller/projectController");
@@ -27,6 +29,11 @@ router.post(
   protect,
   upload.single("projectImage"),
   projectController.createProject
+);
+router.delete(
+  "/:projectId/members/:memberId",
+  protect,
+  projectController.removeMember
 );
 
 // PARAMETERIZED ROUTES - These must come AFTER specific routes

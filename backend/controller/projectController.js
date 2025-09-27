@@ -1,3 +1,25 @@
+// Remove a member from a project (leader only)
+exports.removeMember = async (req, res) => {
+  const { projectId, memberId } = req.params;
+  const leaderId = req.user.id;
+  try {
+    // Verify leader
+    const project = await pool.query("SELECT leader_id FROM projects WHERE id = $1", [projectId]);
+    if (project.rows.length === 0 || project.rows[0].leader_id !== leaderId) {
+      return res.status(403).json({ success: false, message: "Access denied." });
+    }
+    // Prevent removing leader
+    const member = await pool.query("SELECT role FROM project_members WHERE project_id = $1 AND member_id = $2", [projectId, memberId]);
+    if (member.rows.length > 0 && member.rows[0].role === "leader") {
+      return res.status(400).json({ success: false, message: "Cannot remove the project leader." });
+    }
+    // Remove member
+    await pool.query("DELETE FROM project_members WHERE project_id = $1 AND member_id = $2", [projectId, memberId]);
+    res.json({ success: true, message: "Member removed." });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+};
 const { triggerIndexing, deleteProjectFromIndex } = require("../grpcClient");
 
 // Get all accepted members (and their roles) of a project
