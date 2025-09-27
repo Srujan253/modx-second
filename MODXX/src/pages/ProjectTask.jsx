@@ -3,31 +3,65 @@ import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ProjectTasks from "../components/ProjectTasks";
 import MyTaskPanel from "../components/MyTaskPanel";
+import ProjectTaskCharts from "../components/ProjectTaskCharts";
 import axiosInstance from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
-import { 
-  Users, 
-  UserCheck, 
-  Loader2, 
-  Settings, 
-  Target, 
-  Crown, 
-  Shield, 
+import {
+  Users,
+  UserCheck,
+  Loader2,
+  Settings,
+  Target,
+  Crown,
+  Shield,
   User,
   Calendar,
   Clock,
   CheckCircle,
   ArrowLeft,
   Sparkles,
-  Activity
+  Activity,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const ProjectTask = () => {
+  // ...existing code...
+
+  // Edit and delete handlers for tasks
+  const handleEditTask = async (taskId, updates) => {
+    try {
+      const res = await axiosInstance.patch(
+        `/project/${projectId}/tasks/${taskId}`,
+        updates
+      );
+      toast.success("Task updated");
+      // Optionally: trigger a refresh or callback
+    } catch (err) {
+      toast.error("Failed to update task");
+    }
+  };
+
+  // Delete handler for tasks
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await axiosInstance.delete(`/project/${projectId}/tasks/${taskId}`);
+      toast.success("Task deleted");
+      // Optionally: trigger a refresh or callback
+    } catch (err) {
+      toast.error("Failed to delete task");
+    }
+  };
+
   const { projectId } = useParams();
   const { user } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState('tasks'); // 'tasks' or 'overview'
+  const [activeView, setActiveView] = useState("tasks"); // 'tasks' or 'overview'
+
+  // Find current user's role in the project (after hooks)
+  const myMember = members.find((m) => m.email === user?.email);
+  const myRole = myMember?.role || "member";
+  const isLeaderOrMentor = myRole === "leader" || myRole === "mentor";
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -49,33 +83,39 @@ const ProjectTask = () => {
           <div className="relative mb-8">
             <div className="w-16 h-16 border-4 border-gray-700 rounded-full animate-spin mx-auto"></div>
             <div className="absolute inset-0 w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-2 w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse' }}></div>
+            <div
+              className="absolute inset-2 w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"
+              style={{ animationDirection: "reverse" }}
+            ></div>
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">Loading Project Tasks</h3>
+          <h3 className="text-2xl font-bold text-white mb-2">
+            Loading Project Tasks
+          </h3>
           <p className="text-gray-400">Preparing your workspace...</p>
         </div>
       </div>
     );
   }
 
-  // User's project role
-  const myMembership = members.find((m) => m.id === user?.id);
-  const myRole = myMembership?.role;
-  const isLeaderOrMentor = myRole === "leader" || myRole === "mentor";
-
   const getRoleIcon = (role) => {
     switch (role) {
-      case 'leader': return Crown;
-      case 'mentor': return Shield;
-      default: return User;
+      case "leader":
+        return Crown;
+      case "mentor":
+        return Shield;
+      default:
+        return User;
     }
   };
 
   const getRoleColor = (role) => {
     switch (role) {
-      case 'leader': return 'text-yellow-400';
-      case 'mentor': return 'text-blue-400';
-      default: return 'text-green-400';
+      case "leader":
+        return "text-yellow-400";
+      case "mentor":
+        return "text-blue-400";
+      default:
+        return "text-green-400";
     }
   };
 
@@ -104,54 +144,49 @@ const ProjectTask = () => {
                 <ArrowLeft size={20} />
               </Link>
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Activity className="text-orange-400 w-6 h-6" />
-                  <h1 className="text-3xl font-bold text-white">Project Tasks</h1>
-                  <div className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-sm font-semibold border border-orange-500/30">
-                    {members.length} Members
-                  </div>
-                </div>
-                <p className="text-gray-400">Manage and track project progress</p>
+                <h1 className="text-2xl font-bold text-white">Project Tasks</h1>
+                <p className="text-gray-400">
+                  Manage and track project progress
+                </p>
               </div>
             </div>
-
-            {/* View Toggle */}
-            <div className="flex bg-gray-800/80 rounded-xl p-1 border border-gray-600/50">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setActiveView('tasks')}
-                className={`px-4 py-2 rounded-lg transition-all font-medium ${
-                  activeView === 'tasks' 
-                    ? 'bg-orange-500 text-white shadow-lg' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <Target size={16} className="mr-2 inline" />
-                Tasks
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setActiveView('overview')}
-                className={`px-4 py-2 rounded-lg transition-all font-medium ${
-                  activeView === 'overview' 
-                    ? 'bg-orange-500 text-white shadow-lg' 
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <Users size={16} className="mr-2 inline" />
-                Overview
-              </motion.button>
-            </div>
+            {/* You can add header actions here if needed */}
+          </div>
+          {/* View Toggle */}
+          <div className="flex bg-gray-800/80 rounded-xl p-1 border border-gray-600/50 mt-6">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveView("tasks")}
+              className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                activeView === "tasks"
+                  ? "bg-orange-500 text-white shadow-lg"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Target size={16} className="mr-2 inline" />
+              Tasks
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveView("overview")}
+              className={`px-4 py-2 rounded-lg transition-all font-medium ${
+                activeView === "overview"
+                  ? "bg-orange-500 text-white shadow-lg"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Users size={16} className="mr-2 inline" />
+              Overview
+            </motion.button>
           </div>
         </div>
       </motion.div>
-
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-8">
         <AnimatePresence mode="wait">
-          {activeView === 'tasks' ? (
+          {activeView === "tasks" ? (
             <motion.div
               key="tasks"
               initial={{ opacity: 0, x: -20 }}
@@ -176,17 +211,29 @@ const ProjectTask = () => {
                           <Settings className="text-orange-400 w-5 h-5" />
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold text-white">Task Management</h2>
+                          <h2 className="text-xl font-bold text-white">
+                            Task Management
+                          </h2>
                           <p className="text-gray-400 text-sm">
-                            {isLeaderOrMentor ? 'Assign and manage all tasks' : 'View project tasks'}
+                            {isLeaderOrMentor
+                              ? "Assign and manage all tasks"
+                              : "View project tasks"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {getRoleIcon(myRole) && (
-                          <div className={`flex items-center gap-1 px-3 py-1 rounded-full bg-gray-700/50 ${getRoleColor(myRole)}`}>
-                            {React.createElement(getRoleIcon(myRole), { size: 14 })}
-                            <span className="text-sm font-medium capitalize">{myRole || 'Member'}</span>
+                          <div
+                            className={`flex items-center gap-1 px-3 py-1 rounded-full bg-gray-700/50 ${getRoleColor(
+                              myRole
+                            )}`}
+                          >
+                            {React.createElement(getRoleIcon(myRole), {
+                              size: 14,
+                            })}
+                            <span className="text-sm font-medium capitalize">
+                              {myRole || "Member"}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -199,6 +246,9 @@ const ProjectTask = () => {
                       projectId={projectId}
                       members={members}
                       showAssignForm={isLeaderOrMentor}
+                      canEditDelete={isLeaderOrMentor}
+                      onEditTask={handleEditTask}
+                      onDeleteTask={handleDeleteTask}
                     />
                   </div>
                 </div>
@@ -233,7 +283,9 @@ const ProjectTask = () => {
                 >
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="text-blue-400 w-5 h-5" />
-                    <h3 className="text-lg font-bold text-white">Quick Stats</h3>
+                    <h3 className="text-lg font-bold text-white">
+                      Quick Stats
+                    </h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-gray-700/30 rounded-xl">
@@ -244,7 +296,7 @@ const ProjectTask = () => {
                     </div>
                     <div className="text-center p-3 bg-gray-700/30 rounded-xl">
                       <div className="text-2xl font-bold text-green-400">
-                        {members.filter(m => m.role === 'leader').length}
+                        {members.filter((m) => m.role === "leader").length}
                       </div>
                       <div className="text-xs text-gray-400">Leaders</div>
                     </div>
@@ -272,8 +324,12 @@ const ProjectTask = () => {
                       <Users className="text-blue-400 w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-white">Team Overview</h2>
-                      <p className="text-gray-400">Meet your project collaborators</p>
+                      <h2 className="text-2xl font-bold text-white">
+                        Team Overview
+                      </h2>
+                      <p className="text-gray-400">
+                        Meet your project collaborators
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -295,18 +351,22 @@ const ProjectTask = () => {
                           <div className="flex flex-col items-center text-center">
                             <div className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center mb-4 shadow-lg group-hover:shadow-orange-500/25 transition-shadow">
                               <span className="text-white font-bold text-lg">
-                                {member.name?.charAt(0) || 'U'}
+                                {member.name?.charAt(0) || "U"}
                               </span>
                             </div>
-                            
+
                             <h3 className="text-lg font-bold text-white mb-1 group-hover:text-orange-400 transition-colors">
-                              {member.name || 'Unknown User'}
+                              {member.name || "Unknown User"}
                             </h3>
-                            
-                            <div className={`flex items-center gap-1 px-3 py-1 rounded-full bg-gray-800/50 ${getRoleColor(member.role)} mb-3`}>
+
+                            <div
+                              className={`flex items-center gap-1 px-3 py-1 rounded-full bg-gray-800/50 ${getRoleColor(
+                                member.role
+                              )} mb-3`}
+                            >
                               <RoleIcon size={12} />
                               <span className="text-xs font-medium capitalize">
-                                {member.role || 'Member'}
+                                {member.role || "Member"}
                               </span>
                             </div>
 
@@ -332,10 +392,16 @@ const ProjectTask = () => {
                   {members.length === 0 && (
                     <div className="text-center py-12">
                       <Users size={48} className="text-gray-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-bold text-gray-400 mb-2">No team members found</h3>
-                      <p className="text-gray-500">This project doesn't have any members yet.</p>
+                      <h3 className="text-xl font-bold text-gray-400 mb-2">
+                        No team members found
+                      </h3>
+                      <p className="text-gray-500">
+                        This project doesn't have any members yet.
+                      </p>
                     </div>
                   )}
+                  {/* Task Analytics Charts & Table - moved here for correct placement */}
+                  <ProjectTaskCharts projectId={projectId} members={members} />
                 </div>
               </motion.div>
             </motion.div>

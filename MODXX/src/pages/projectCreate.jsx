@@ -146,17 +146,6 @@ const ProjectCreation = () => {
             )}
           </div>
 
-          <div>
-            <label htmlFor="motivation" className="block text-gray-300 mb-1">
-              Why should members join? (Motivation)
-            </label>
-            <textarea
-              id="motivation"
-              rows="3"
-              {...register("motivation")}
-              className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            ></textarea>
-          </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             <div>

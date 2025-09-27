@@ -101,4 +101,19 @@ router.post(
 // Get project details (protected route)
 router.get("/:projectId", protect, projectController.getProjectDetails);
 
+// Edit project (leader only, with image upload)
+router.put(
+  "/:projectId",
+  protect,
+  upload.single("projectImage"),
+  projectController.editProject
+);
+
+// Delete project (leader only)
+router.delete(
+  "/:projectId",
+  protect,
+  projectController.deleteProject
+);
+
 module.exports = router;

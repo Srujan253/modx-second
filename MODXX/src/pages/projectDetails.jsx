@@ -278,6 +278,30 @@ const ProjectDetails = () => {
                 settings here.
               </p>
               {/* TODO: Add mentor assignment and member management UI here */}
+                <div className="flex gap-4 mt-6">
+                  <button
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
+                    onClick={() => window.location.href = `/project/${projectId}/edit`}
+                  >
+                    Edit Project
+                  </button>
+                  <button
+                    className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
+                    onClick={async () => {
+                      if (window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+                        try {
+                          await axios.delete(`${API_URL}/project/${projectId}`, { withCredentials: true });
+                          toast.success("Project deleted successfully.");
+                          window.location.href = "/dashboard";
+                        } catch (error) {
+                          toast.error(error.response?.data?.message || "Failed to delete project.");
+                        }
+                      }
+                    }}
+                  >
+                    Delete Project
+                  </button>
+                </div>
             </div>
           </div>
         )}

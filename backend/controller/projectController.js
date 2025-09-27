@@ -16,6 +16,107 @@ exports.getProjectMembers = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+// Edit project (leader only, supports image upload)
+exports.editProject = async (req, res) => {
+  const { projectId } = req.params;
+  const userId = req.user.id;
+  try {
+    // Get project
+    const projectRes = await pool.query("SELECT * FROM projects WHERE id = $1", [projectId]);
+    if (projectRes.rows.length === 0) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+    const project = projectRes.rows[0];
+    if (project.leader_id !== userId) {
+      return res.status(403).json({ message: "Only the project leader can edit this project." });
+    }
+
+    // Prepare update fields
+    const {
+      title,
+      timeline,
+      description,
+      goals,
+      requiredSkills,
+      techStack,
+      maxMembers
+    } = req.body;
+
+    let projectImage = project.project_image;
+    if (req.file) {
+      projectImage = "/uploads/" + req.file.filename;
+    }
+
+    // Convert comma-separated strings to arrays
+    const required_skills = requiredSkills ? requiredSkills.split(",").map(s => s.trim()) : project.required_skills;
+    const tech_stack = techStack ? techStack.split(",").map(s => s.trim()) : project.tech_stack;
+
+    await pool.query(
+      `UPDATE projects SET
+        title = COALESCE($1, title),
+        timeline = COALESCE($2, timeline),
+        description = COALESCE($3, description),
+        goals = COALESCE($4, goals),
+        required_skills = COALESCE($5, required_skills),
+        tech_stack = COALESCE($6, tech_stack),
+        max_members = COALESCE($7, max_members),
+        project_image = COALESCE($8, project_image)
+      WHERE id = $9`,
+      [
+        title,
+        timeline,
+        description,
+        goals,
+        required_skills,
+        tech_stack,
+        maxMembers,
+        projectImage,
+        projectId
+      ]
+    );
+    res.status(200).json({ success: true, message: "Project updated successfully." });
+  } catch (error) {
+    console.error("Error editing project:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Delete project (leader only)
+exports.deleteProject = async (req, res) => {
+  const { projectId } = req.params;
+  const userId = req.user.id;
+  try {
+    // Get project
+    const projectRes = await pool.query("SELECT * FROM projects WHERE id = $1", [projectId]);
+    if (projectRes.rows.length === 0) {
+      return res.status(404).json({ message: "Project not found." });
+    }
+    const project = projectRes.rows[0];
+    if (project.leader_id !== userId) {
+      return res.status(403).json({ message: "Only the project leader can delete this project." });
+    }
+
+    // Remove project image from uploads folder if exists
+    if (project.project_image && project.project_image.startsWith("/uploads/")) {
+      const fs = require("fs");
+      const path = require("path");
+      const imagePath = path.join(__dirname, "..", project.project_image);
+      fs.unlink(imagePath, (err) => {
+        if (err && err.code !== "ENOENT") {
+          console.error("Error deleting project image:", err);
+        }
+      });
+    }
+
+    // Delete project (cascade deletes members/tasks if FK is set)
+    await pool.query("DELETE FROM projects WHERE id = $1", [projectId]);
+    res.status(200).json({ success: true, message: "Project deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 // Get all project invitations for the logged-in user (status: 'invited')
 exports.getUserInvites = async (req, res) => {
   const userId = req.user.id;

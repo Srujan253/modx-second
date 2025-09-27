@@ -22,6 +22,7 @@ import Footer from "./components/Footer";
 import Profile from "./pages/profile";
 import UserProfile from "./pages/profile";
 import ProjectCreation from "./pages/projectCreate";
+import ProjectEdit from "./pages/ProjectEdit";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/dashboard";
 import ProjectDetails from "./pages/projectDetails";
@@ -88,6 +89,15 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+
+              <Route
+                path="/project/:projectId/edit"
+                element={
+                  <ProtectedRoute>
+                    <ProjectEdit />
+                  </ProtectedRoute>
+                }
+              />
             <Route
               path="/apply-join-system"
               element={
