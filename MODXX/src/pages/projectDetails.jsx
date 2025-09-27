@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { Star, User, Users } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import MyTaskPanel from "../components/MyTaskPanel";
+import RelatedProjects from "../components/RelatedProjects";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
@@ -280,7 +281,9 @@ const ProjectDetails = () => {
             </div>
           </div>
         )}
+        <RelatedProjects currentProjectId={projectId} />
       </div>
+
       {/* Right-side: If not leader, show MyTaskPanel for assigned tasks */}
       {!isLeader && (
         <div className="w-full md:w-80">

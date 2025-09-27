@@ -4,19 +4,19 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { 
-  Users, 
-  Search, 
-  Send, 
-  Eye, 
-  Star, 
-  Mail, 
-  CheckCircle, 
+import {
+  Users,
+  Search,
+  Send,
+  Eye,
+  Star,
+  Mail,
+  CheckCircle,
   Clock,
   Sparkles,
   ChevronDown,
   User,
-  Badge
+  Badge,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
@@ -99,7 +99,8 @@ const ApplyJoinSystem = () => {
               </h1>
             </div>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Discover talented individuals and build your dream team with our intelligent member discovery system
+              Discover talented individuals and build your dream team with our
+              intelligent member discovery system
             </p>
           </motion.div>
 
@@ -119,7 +120,7 @@ const ApplyJoinSystem = () => {
                   Select Your Project
                 </label>
               </div>
-              
+
               <div className="relative">
                 <select
                   className="w-full p-4 rounded-xl bg-gray-700/50 backdrop-blur-sm text-white border border-gray-600/50 focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 transition-all duration-200 appearance-none cursor-pointer hover:bg-gray-700/70"
@@ -151,7 +152,9 @@ const ApplyJoinSystem = () => {
               >
                 <div className="inline-flex items-center gap-3 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl px-6 py-4">
                   <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-gray-300 text-lg">Discovering potential team members...</span>
+                  <span className="text-gray-300 text-lg">
+                    Discovering potential team members...
+                  </span>
                 </div>
               </motion.div>
             )}
@@ -189,9 +192,12 @@ const ApplyJoinSystem = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-700/50 rounded-full mb-4">
                       <Users className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h4 className="text-xl font-semibold text-gray-300 mb-2">No Available Members</h4>
+                    <h4 className="text-xl font-semibold text-gray-300 mb-2">
+                      No Available Members
+                    </h4>
                     <p className="text-gray-500">
-                      All suitable members have been invited or no matches found for this project.
+                      All suitable members have been invited or no matches found
+                      for this project.
                     </p>
                   </motion.div>
                 ) : (
@@ -230,13 +236,17 @@ const ApplyJoinSystem = () => {
                           <div className="flex items-center justify-center gap-2 mb-2">
                             <Badge className="w-4 h-4 text-orange-400" />
                             <p className="text-sm text-gray-400">
-                              {member.skills?.slice(0, 2).join(", ") || "No skills listed"}
-                              {member.skills?.length > 2 && ` +${member.skills.length - 2} more`}
+                              {member.skills?.slice(0, 2).join(", ") ||
+                                "No skills listed"}
+                              {member.skills?.length > 2 &&
+                                ` +${member.skills.length - 2} more`}
                             </p>
                           </div>
                           <div className="flex items-center justify-center gap-1">
                             <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                            <span className="text-sm text-gray-400">4.8 Rating</span>
+                            <span className="text-sm text-gray-400">
+                              4.8 Rating
+                            </span>
                           </div>
                         </div>
 
@@ -249,7 +259,7 @@ const ApplyJoinSystem = () => {
                             <Eye className="w-4 h-4 group-hover/btn:text-orange-400 transition-colors" />
                             View Profile
                           </Link>
-                          
+
                           <motion.button
                             onClick={() => handleSendInvite(member.id)}
                             whileHover={{ scale: 1.02 }}

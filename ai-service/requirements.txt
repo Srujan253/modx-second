@@ -7,3 +7,5 @@ chromadb
 psycopg2-binary  # For connecting to PostgreSQL
 beautifulsoup4
 requests
+grpcio 
+grpcio-tools

@@ -32,7 +32,7 @@ app.use(cookieParser()); // Use cookie-parser to read cookies from requests
 app.use("/api/v1/users", require("./routes/userRoutes"));
 app.use("/api/v1/project", require("./routes/projectRoutes"));
 app.use("/api/v1/project", require("./routes/taskRoutes"));
-
+app.use("/api/v1/recommendations", require("./routes/recommendation.routes"));
 // Gemini API route
 const aiRoutes = require("./routes/geminiRoutes");
 app.use("/api/v1/ai", aiRoutes);

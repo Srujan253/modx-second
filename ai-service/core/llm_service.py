@@ -82,7 +82,7 @@ tools = [
 
 # --- 4. INITIALIZE THE MODEL WITH THE SYSTEM PROMPT AND TOOLS ---
 model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
+    model_name='gemini-2.5-flash',
     tools=tools,
     system_instruction=system_prompt
 )

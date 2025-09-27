@@ -1,4 +1,3 @@
-# File: services/vector_store.py
 import chromadb
 from sentence_transformers import SentenceTransformer
 from core.config import (
@@ -7,7 +6,6 @@ from core.config import (
     CHROMA_TENANT, 
     CHROMA_DATABASE
 )
-import uuid
 
 client = chromadb.CloudClient(
     tenant=CHROMA_TENANT,
@@ -18,31 +16,30 @@ client = chromadb.CloudClient(
 collection = client.get_or_create_collection("modx_knowledge_base")
 embedding_model = SentenceTransformer(EMBEDDING_MODEL)
 
-def add_documents_to_store(documents):
-    """Converts a list of text documents to embeddings and adds them to Chroma Cloud with unique IDs."""
-    if not documents:
-        print("No documents to add.")
-        return
-        
-    embeddings = embedding_model.encode(documents)
-    ids = [str(uuid.uuid4()) for _ in documents]
+def add_documents_to_store(documents_with_metadata):
+    """Adds documents with their metadata to Chroma Cloud."""
+    if not documents_with_metadata: return
+
+    ids = [item[0] for item in documents_with_metadata]
+    documents = [item[1] for item in documents_with_metadata]
+    metadatas = [item[2] for item in documents_with_metadata]
     
-    collection.add(
+    embeddings = embedding_model.encode(documents)
+    
+    collection.upsert(
         embeddings=embeddings.tolist(),
         documents=documents,
-        ids=ids
+        ids=ids,
+        metadatas=metadatas # <-- Save the metadata
     )
-    print(f"Successfully added {len(documents)} documents to Chroma Cloud.")
+    print(f"Successfully upserted {len(documents)} documents.")
 
-# --- THIS IS THE FIX ---
-# Renamed the function to match what llm_service.py is calling
-def find_similar_documents(query_text: str, n_results=3) -> str:
-    """Finds the most semantically similar documents for a given conceptual query."""
+def find_similar_document_ids(query_text: str, n_results=10) -> list[str]:
+    """Finds the most semantically similar documents based on a query."""
     query_embedding = embedding_model.encode([query_text]).tolist()
     results = collection.query(
         query_embeddings=query_embedding,
-        n_results=n_results
+        n_results=n_results,
+        where={"doc_type": "project"} # Filter to only search for projects
     )
-    
-    # Return the results as a single string of context
-    return "\n".join(results['documents'][0])
+    return results['ids'][0]

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package ai;
+
+service AIService {
+  rpc GetChatbotResponse(ChatRequest) returns (ChatReply) {}
+  
+  rpc GetUserRecommendations(RecommendationRequest) returns (RecommendationReply) {}
+  rpc GetRelatedProjects(RecommendationRequest) returns (RecommendationReply) {}
+  rpc SearchProjects(SearchRequest) returns (RecommendationReply) {}
+}
+
+// --- Request Messages ---
+message ChatRequest {
+  string query = 1;
+}
+message RecommendationRequest {
+  string query_text = 1;
+}
+message SearchRequest {
+  string search_query = 1;
+}
+
+// --- Response Messages ---
+message ChatReply {
+  string answer = 1;
+}
+
+message RecommendationReply {
+  // --- THIS IS THE FIX ---
+  // We now send back a list of the unique IDs (e.g., "project_1", "user_5")
+  repeated string recommended_ids = 1;
+}
