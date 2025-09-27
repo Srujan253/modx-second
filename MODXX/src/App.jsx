@@ -90,14 +90,14 @@ function AppContent() {
               }
             />
 
-              <Route
-                path="/project/:projectId/edit"
-                element={
-                  <ProtectedRoute>
-                    <ProjectEdit />
-                  </ProtectedRoute>
-                }
-              />
+            <Route
+              path="/project/:projectId/edit"
+              element={
+                <ProtectedRoute>
+                  <ProjectEdit />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/apply-join-system"
               element={

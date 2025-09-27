@@ -54,6 +54,16 @@ class AIServiceStub(object):
                 request_serializer=ai__pb2.SearchRequest.SerializeToString,
                 response_deserializer=ai__pb2.RecommendationReply.FromString,
                 _registered_method=True)
+        self.IndexNewData = channel.unary_unary(
+                '/ai.AIService/IndexNewData',
+                request_serializer=ai__pb2.Empty.SerializeToString,
+                response_deserializer=ai__pb2.IndexReply.FromString,
+                _registered_method=True)
+        self.DeleteProjectFromIndex = channel.unary_unary(
+                '/ai.AIService/DeleteProjectFromIndex',
+                request_serializer=ai__pb2.DeleteProjectRequest.SerializeToString,
+                response_deserializer=ai__pb2.IndexingResponse.FromString,
+                _registered_method=True)
 
 
 class AIServiceServicer(object):
@@ -83,6 +93,18 @@ class AIServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def IndexNewData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteProjectFromIndex(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AIServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -105,6 +127,16 @@ def add_AIServiceServicer_to_server(servicer, server):
                     servicer.SearchProjects,
                     request_deserializer=ai__pb2.SearchRequest.FromString,
                     response_serializer=ai__pb2.RecommendationReply.SerializeToString,
+            ),
+            'IndexNewData': grpc.unary_unary_rpc_method_handler(
+                    servicer.IndexNewData,
+                    request_deserializer=ai__pb2.Empty.FromString,
+                    response_serializer=ai__pb2.IndexReply.SerializeToString,
+            ),
+            'DeleteProjectFromIndex': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteProjectFromIndex,
+                    request_deserializer=ai__pb2.DeleteProjectRequest.FromString,
+                    response_serializer=ai__pb2.IndexingResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -215,6 +247,60 @@ class AIService(object):
             '/ai.AIService/SearchProjects',
             ai__pb2.SearchRequest.SerializeToString,
             ai__pb2.RecommendationReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def IndexNewData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ai.AIService/IndexNewData',
+            ai__pb2.Empty.SerializeToString,
+            ai__pb2.IndexReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteProjectFromIndex(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/ai.AIService/DeleteProjectFromIndex',
+            ai__pb2.DeleteProjectRequest.SerializeToString,
+            ai__pb2.IndexingResponse.FromString,
             options,
             channel_credentials,
             insecure,

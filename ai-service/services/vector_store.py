@@ -43,3 +43,11 @@ def find_similar_document_ids(query_text: str, n_results=10) -> list[str]:
         where={"doc_type": "project"} # Filter to only search for projects
     )
     return results['ids'][0]
+
+def delete_document_from_store(doc_id: str):
+    """Deletes a document by its ID from ChromaDB."""
+    try:
+        collection.delete(ids=[doc_id])
+        print(f"✅ Deleted document {doc_id} from ChromaDB")
+    except Exception as e:
+        print(f"❌ Error deleting document {doc_id}: {e}")

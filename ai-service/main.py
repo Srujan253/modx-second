@@ -2,7 +2,8 @@ import grpc
 import time
 from concurrent import futures
 from services import vector_store
-
+from services import vector_indexer
+from services.vector_store import delete_document_from_store
 # Import the auto-generated gRPC files
 import ai_pb2
 import ai_pb2_grpc
@@ -32,6 +33,17 @@ class AIServiceServicer(ai_pb2_grpc.AIServiceServicer):
         # Fetch the top 6 most relevant search results
         doc_ids = vector_store.find_similar_document_ids(request.search_query, n_results=6)
         return ai_pb2.RecommendationReply(recommended_ids=doc_ids)
+
+    def IndexNewData(self, request, context):
+        # Call the indexing logic
+        result = vector_indexer.index_new_data()
+        return ai_pb2.IndexReply(status=result)
+    
+    def DeleteProjectFromIndex(self, request, context):
+        project_id = request.project_id
+        doc_id = f"project_{project_id}"
+        delete_document_from_store(doc_id)
+        return ai_pb2.IndexingResponse(message=f"Deleted {doc_id} from index")
 
 def serve():
     # Create a gRPC server with a thread pool for handling requests

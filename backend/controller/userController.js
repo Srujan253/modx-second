@@ -17,6 +17,7 @@ const pool = require("../db");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/email");
 const sendToken = require("../utils/sendToken");
+const { triggerIndexing } = require("../grpcClient");
 
 // Handles Step 1 & 2: Register user and send OTP
 exports.register = async (req, res) => {
@@ -80,6 +81,9 @@ exports.verify = async (req, res) => {
       "UPDATE users SET is_verified = TRUE, otp_code = NULL, otp_expires_at = NULL WHERE email = $1",
       [email]
     );
+    triggerIndexing().catch((err) =>
+      console.error("Indexing error after verification:", err)
+    );
 
     // THE FIX: Instead of calling sendToken, return a simple success message.
     res.status(200).json({
@@ -109,10 +113,9 @@ exports.getMe = async (req, res) => {
   // This is a protected route. A middleware will run first to verify the token
   // and attach the user's ID to req.user.
   try {
-    const user = await pool.query(
-      "SELECT id, full_name, email, role FROM users WHERE id = $1",
-      [req.user.id]
-    );
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [
+      req.user.id,
+    ]);
 
     if (!user.rows[0]) {
       return res
@@ -147,5 +150,31 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error during login." });
+  }
+};
+
+// --- NEW UPDATE ME FUNCTION ---
+exports.updateMe = async (req, res) => {
+  const { full_name, role, interest, other_interest } = req.body;
+  try {
+    // Only update allowed fields
+    const result = await pool.query(
+      `UPDATE users SET full_name = $1, role = $2, interest = $3, other_interest = $4 WHERE id = $5 RETURNING id, full_name, role, interest, other_interest`,
+      [full_name, role, interest, other_interest, req.user.id]
+    );
+    if (!result.rows[0]) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
+    }
+    triggerIndexing().catch((err) =>
+      console.error("Indexing error after verification:", err)
+    );
+    res.status(200).json({ success: true, user: result.rows[0] });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server error updating profile." });
   }
 };

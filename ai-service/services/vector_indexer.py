@@ -1,10 +1,10 @@
 import psycopg2
 from core.config import DATABASE_URL
+from services.vector_store import add_documents_to_store
 
 def get_new_or_updated_documents():
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
-
     documents = []
 
     # Projects
@@ -38,7 +38,10 @@ def get_new_or_updated_documents():
     conn.close()
     return documents
 
+
 def mark_as_indexed(ids, table):
+    if not ids:
+        return
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
     query = f"UPDATE {table} SET indexed_at = NOW() WHERE id = ANY(%s)"
@@ -46,3 +49,20 @@ def mark_as_indexed(ids, table):
     conn.commit()
     cur.close()
     conn.close()
+
+
+def index_new_data():
+    documents = get_new_or_updated_documents()
+    if not documents:
+        return "No new documents to index."
+
+    add_documents_to_store(documents)
+
+    project_ids = [int(d[0].split("_")[1]) for d in documents if d[0].startswith("project_")]
+    user_ids = [int(d[0].split("_")[1]) for d in documents if d[0].startswith("user_")]
+
+    mark_as_indexed(project_ids, "projects")
+    mark_as_indexed(user_ids, "users")
+
+    return f"Indexed {len(documents)} documents."
+

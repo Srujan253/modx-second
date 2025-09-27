@@ -1,3 +1,5 @@
+const { triggerIndexing, deleteProjectFromIndex } = require("../grpcClient");
+
 // Get all accepted members (and their roles) of a project
 exports.getProjectMembers = async (req, res) => {
   const { projectId } = req.params;
@@ -23,13 +25,18 @@ exports.editProject = async (req, res) => {
   const userId = req.user.id;
   try {
     // Get project
-    const projectRes = await pool.query("SELECT * FROM projects WHERE id = $1", [projectId]);
+    const projectRes = await pool.query(
+      "SELECT * FROM projects WHERE id = $1",
+      [projectId]
+    );
     if (projectRes.rows.length === 0) {
       return res.status(404).json({ message: "Project not found." });
     }
     const project = projectRes.rows[0];
     if (project.leader_id !== userId) {
-      return res.status(403).json({ message: "Only the project leader can edit this project." });
+      return res
+        .status(403)
+        .json({ message: "Only the project leader can edit this project." });
     }
 
     // Prepare update fields
@@ -40,7 +47,7 @@ exports.editProject = async (req, res) => {
       goals,
       requiredSkills,
       techStack,
-      maxMembers
+      maxMembers,
     } = req.body;
 
     let projectImage = project.project_image;
@@ -49,8 +56,12 @@ exports.editProject = async (req, res) => {
     }
 
     // Convert comma-separated strings to arrays
-    const required_skills = requiredSkills ? requiredSkills.split(",").map(s => s.trim()) : project.required_skills;
-    const tech_stack = techStack ? techStack.split(",").map(s => s.trim()) : project.tech_stack;
+    const required_skills = requiredSkills
+      ? requiredSkills.split(",").map((s) => s.trim())
+      : project.required_skills;
+    const tech_stack = techStack
+      ? techStack.split(",").map((s) => s.trim())
+      : project.tech_stack;
 
     await pool.query(
       `UPDATE projects SET
@@ -72,10 +83,13 @@ exports.editProject = async (req, res) => {
         tech_stack,
         maxMembers,
         projectImage,
-        projectId
+        projectId,
       ]
     );
-    res.status(200).json({ success: true, message: "Project updated successfully." });
+    await triggerIndexing();
+    res
+      .status(200)
+      .json({ success: true, message: "Project updated successfully." });
   } catch (error) {
     console.error("Error editing project:", error);
     res.status(500).json({ message: "Server Error" });
@@ -88,17 +102,25 @@ exports.deleteProject = async (req, res) => {
   const userId = req.user.id;
   try {
     // Get project
-    const projectRes = await pool.query("SELECT * FROM projects WHERE id = $1", [projectId]);
+    const projectRes = await pool.query(
+      "SELECT * FROM projects WHERE id = $1",
+      [projectId]
+    );
     if (projectRes.rows.length === 0) {
       return res.status(404).json({ message: "Project not found." });
     }
     const project = projectRes.rows[0];
     if (project.leader_id !== userId) {
-      return res.status(403).json({ message: "Only the project leader can delete this project." });
+      return res
+        .status(403)
+        .json({ message: "Only the project leader can delete this project." });
     }
 
     // Remove project image from uploads folder if exists
-    if (project.project_image && project.project_image.startsWith("/uploads/")) {
+    if (
+      project.project_image &&
+      project.project_image.startsWith("/uploads/")
+    ) {
       const fs = require("fs");
       const path = require("path");
       const imagePath = path.join(__dirname, "..", project.project_image);
@@ -111,7 +133,10 @@ exports.deleteProject = async (req, res) => {
 
     // Delete project (cascade deletes members/tasks if FK is set)
     await pool.query("DELETE FROM projects WHERE id = $1", [projectId]);
-    res.status(200).json({ success: true, message: "Project deleted successfully." });
+    await deleteProjectFromIndex(projectId);
+    res
+      .status(200)
+      .json({ success: true, message: "Project deleted successfully." });
   } catch (error) {
     console.error("Error deleting project:", error);
     res.status(500).json({ message: "Server Error" });
@@ -602,6 +627,7 @@ exports.createProject = async (req, res) => {
        WHERE id = $1 AND 'leader' <> ALL(roles)`,
       [userId]
     );
+    await triggerIndexing();
 
     res.status(201).json({
       success: true,
@@ -938,7 +964,7 @@ exports.getUserProjects = async (req, res) => {
 exports.applyToProject = async (req, res) => {
   const { projectId } = req.params;
   const userId = req.user.id;
-  
+
   try {
     // Check if user is already a member or has pending request
     const existingMembership = await pool.query(
@@ -948,18 +974,21 @@ exports.applyToProject = async (req, res) => {
 
     if (existingMembership.rows.length > 0) {
       const status = existingMembership.rows[0].status;
-      if (status === 'accepted') {
-        return res.status(400).json({ message: "You are already a member of this project." });
-      } else if (status === 'pending') {
-        return res.status(400).json({ message: "You have already applied to this project." });
+      if (status === "accepted") {
+        return res
+          .status(400)
+          .json({ message: "You are already a member of this project." });
+      } else if (status === "pending") {
+        return res
+          .status(400)
+          .json({ message: "You have already applied to this project." });
       }
     }
 
     // Check if project exists and get project details
-    const project = await pool.query(
-      "SELECT * FROM projects WHERE id = $1",
-      [projectId]
-    );
+    const project = await pool.query("SELECT * FROM projects WHERE id = $1", [
+      projectId,
+    ]);
 
     if (project.rows.length === 0) {
       return res.status(404).json({ message: "Project not found." });
@@ -967,7 +996,9 @@ exports.applyToProject = async (req, res) => {
 
     // Check if user is the project leader
     if (project.rows[0].leader_id === userId) {
-      return res.status(400).json({ message: "You cannot apply to your own project." });
+      return res
+        .status(400)
+        .json({ message: "You cannot apply to your own project." });
     }
 
     // Check if project has reached max members
@@ -978,18 +1009,21 @@ exports.applyToProject = async (req, res) => {
 
     const memberCount = parseInt(currentMembers.rows[0].member_count);
     if (memberCount >= project.rows[0].max_members) {
-      return res.status(400).json({ message: "This project has reached its maximum number of members." });
+      return res.status(400).json({
+        message: "This project has reached its maximum number of members.",
+      });
     }
 
     // Insert the application with 'pending' status
     await pool.query(
       "INSERT INTO project_members (project_id, member_id, role, status) VALUES ($1, $2, $3, $4)",
-      [projectId, userId, 'member', 'pending']
+      [projectId, userId, "member", "pending"]
     );
 
-    res.status(200).json({ 
-      success: true, 
-      message: "Application submitted successfully! The project leader will review your request." 
+    res.status(200).json({
+      success: true,
+      message:
+        "Application submitted successfully! The project leader will review your request.",
     });
   } catch (error) {
     console.error("Error applying to project:", error);

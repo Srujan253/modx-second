@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x08\x61i.proto\x12\x02\x61i\"\x1c\n\x0b\x43hatRequest\x12\r\n\x05query\x18\x01 \x01(\t\"+\n\x15RecommendationRequest\x12\x12\n\nquery_text\x18\x01 \x01(\t\"%\n\rSearchRequest\x12\x14\n\x0csearch_query\x18\x01 \x01(\t\"\x1b\n\tChatReply\x12\x0e\n\x06\x61nswer\x18\x01 \x01(\t\".\n\x13RecommendationReply\x12\x17\n\x0frecommended_ids\x18\x01 \x03(\t2\x9f\x02\n\tAIService\x12\x36\n\x12GetChatbotResponse\x12\x0f.ai.ChatRequest\x1a\r.ai.ChatReply\"\x00\x12N\n\x16GetUserRecommendations\x12\x19.ai.RecommendationRequest\x1a\x17.ai.RecommendationReply\"\x00\x12J\n\x12GetRelatedProjects\x12\x19.ai.RecommendationRequest\x1a\x17.ai.RecommendationReply\"\x00\x12>\n\x0eSearchProjects\x12\x11.ai.SearchRequest\x1a\x17.ai.RecommendationReply\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x08\x61i.proto\x12\x02\x61i\"\x1c\n\x0b\x43hatRequest\x12\r\n\x05query\x18\x01 \x01(\t\"+\n\x15RecommendationRequest\x12\x12\n\nquery_text\x18\x01 \x01(\t\"%\n\rSearchRequest\x12\x14\n\x0csearch_query\x18\x01 \x01(\t\"\x1b\n\tChatReply\x12\x0e\n\x06\x61nswer\x18\x01 \x01(\t\".\n\x13RecommendationReply\x12\x17\n\x0frecommended_ids\x18\x01 \x03(\t\"\x07\n\x05\x45mpty\"\x1c\n\nIndexReply\x12\x0e\n\x06status\x18\x01 \x01(\t\"\x11\n\x0fIndexingRequest\"#\n\x10IndexingResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"*\n\x14\x44\x65leteProjectRequest\x12\x12\n\nproject_id\x18\x01 \x01(\x05\x32\x96\x03\n\tAIService\x12\x36\n\x12GetChatbotResponse\x12\x0f.ai.ChatRequest\x1a\r.ai.ChatReply\"\x00\x12N\n\x16GetUserRecommendations\x12\x19.ai.RecommendationRequest\x1a\x17.ai.RecommendationReply\"\x00\x12J\n\x12GetRelatedProjects\x12\x19.ai.RecommendationRequest\x1a\x17.ai.RecommendationReply\"\x00\x12>\n\x0eSearchProjects\x12\x11.ai.SearchRequest\x1a\x17.ai.RecommendationReply\"\x00\x12+\n\x0cIndexNewData\x12\t.ai.Empty\x1a\x0e.ai.IndexReply\"\x00\x12H\n\x16\x44\x65leteProjectFromIndex\x12\x18.ai.DeleteProjectRequest\x1a\x14.ai.IndexingResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -41,6 +41,16 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_CHATREPLY']._serialized_end=157
   _globals['_RECOMMENDATIONREPLY']._serialized_start=159
   _globals['_RECOMMENDATIONREPLY']._serialized_end=205
-  _globals['_AISERVICE']._serialized_start=208
-  _globals['_AISERVICE']._serialized_end=495
+  _globals['_EMPTY']._serialized_start=207
+  _globals['_EMPTY']._serialized_end=214
+  _globals['_INDEXREPLY']._serialized_start=216
+  _globals['_INDEXREPLY']._serialized_end=244
+  _globals['_INDEXINGREQUEST']._serialized_start=246
+  _globals['_INDEXINGREQUEST']._serialized_end=263
+  _globals['_INDEXINGRESPONSE']._serialized_start=265
+  _globals['_INDEXINGRESPONSE']._serialized_end=300
+  _globals['_DELETEPROJECTREQUEST']._serialized_start=302
+  _globals['_DELETEPROJECTREQUEST']._serialized_end=344
+  _globals['_AISERVICE']._serialized_start=347
+  _globals['_AISERVICE']._serialized_end=753
 # @@protoc_insertion_point(module_scope)

@@ -9,7 +9,12 @@ const {
 } = require("../controller/userController");
 const protect = require("../middleware/authMiddleware");
 
+// Get current user profile
 router.get("/me", protect, getMe);
+
+// Update current user profile (only allowed fields)
+const { updateMe } = require("../controller/userController");
+router.patch("/me", protect, updateMe);
 
 // Route for Step 1 & 2
 router.post("/register", register);

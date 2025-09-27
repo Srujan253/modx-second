@@ -110,10 +110,6 @@ router.put(
 );
 
 // Delete project (leader only)
-router.delete(
-  "/:projectId",
-  protect,
-  projectController.deleteProject
-);
+router.delete("/:projectId", protect, projectController.deleteProject);
 
 module.exports = router;

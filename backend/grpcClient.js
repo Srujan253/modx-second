@@ -78,9 +78,40 @@ const searchProjects = (search_query) => {
   });
 };
 
+const triggerIndexing = () => {
+  return new Promise((resolve, reject) => {
+    client.IndexNewData({}, (error, response) => {
+      if (error) {
+        console.error("Error triggering indexing:", error);
+        return reject(error);
+      }
+      console.log("Indexing triggered:", response.status || "success");
+      resolve(response.status || "success");
+    });
+  });
+};
+
+const deleteProjectFromIndex = (projectId) => {
+  return new Promise((resolve, reject) => {
+    client.DeleteProjectFromIndex(
+      { project_id: parseInt(projectId) },
+      (err, response) => {
+        if (err) {
+          console.error(`Error deleting project ${projectId} from index:`, err);
+          return reject(err);
+        }
+        console.log(`Deleted project ${projectId} from index`);
+        resolve(response);
+      }
+    );
+  });
+};
+
 module.exports = {
   getChatbotResponse,
   getUserRecommendations,
   getRelatedProjects,
   searchProjects,
+  triggerIndexing,
+  deleteProjectFromIndex,
 };

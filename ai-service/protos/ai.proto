@@ -8,6 +8,10 @@ service AIService {
   rpc GetUserRecommendations(RecommendationRequest) returns (RecommendationReply) {}
   rpc GetRelatedProjects(RecommendationRequest) returns (RecommendationReply) {}
   rpc SearchProjects(SearchRequest) returns (RecommendationReply) {}
+
+  rpc IndexNewData(Empty) returns (IndexReply) {}
+
+  rpc DeleteProjectFromIndex (DeleteProjectRequest) returns (IndexingResponse);
 }
 
 // --- Request Messages ---
@@ -30,4 +34,20 @@ message RecommendationReply {
   // --- THIS IS THE FIX ---
   // We now send back a list of the unique IDs (e.g., "project_1", "user_5")
   repeated string recommended_ids = 1;
+}
+
+message Empty {}
+
+message IndexReply {
+    string status = 1;
+}
+
+message IndexingRequest {}
+
+message IndexingResponse {
+  string message = 1;
+}
+
+message DeleteProjectRequest {
+  int32 project_id = 1;
 }
