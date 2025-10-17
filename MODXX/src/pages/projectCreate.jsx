@@ -340,7 +340,7 @@ const ProjectCreation = () => {
   //   );
   // }, []);
 
-  // Gemini API call function with enhanced debugging
+  // Gemini API call function with enhanced debugging and latest endpoint
   const callGeminiAPI = useCallback(async (prompt) => {
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     
@@ -350,8 +350,12 @@ const ProjectCreation = () => {
 
     console.log("🔑 Using Gemini API Key:", GEMINI_API_KEY.substring(0, 20) + "...");
 
+    // Try the latest Gemini API endpoint first
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+    console.log("🌐 API Endpoint:", apiUrl.replace(GEMINI_API_KEY, "***"));
+
     return await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+      apiUrl,
       {
         contents: [{
           parts: [{
@@ -568,6 +572,18 @@ Rewritten description:`;
             }
           }
         );
+      } else if (error.response?.status === 404) {
+        toast.error(
+          "🔑 API Configuration Error!\n\n❌ Gemini API endpoint not found (404)\n\n🔧 Possible issues:\n• API key is invalid or expired\n• Generative AI API not enabled in Google Cloud\n• Billing not set up for your Google Cloud project\n• API key lacks necessary permissions\n\n💡 Try: Create a new API key with Generative AI permissions",
+          { 
+            autoClose: 15000,
+            position: "top-center",
+            style: {
+              fontSize: '14px',
+              lineHeight: '1.4'
+            }
+          }
+        );
       } else if (error.response?.status === 403) {
         toast.error(
           "🔑 AI service unavailable: API key issues detected. Please contact support if this continues.",
@@ -701,6 +717,18 @@ Rewritten goals:`;
           "🚫 AI Temporarily Disabled Due to Rate Limits\n\n📊 Google API limits exceeded (15 requests/minute)\n⏰ AI features disabled for 10 minutes to prevent further issues\n\n🔄 Solutions:\n• Continue writing manually for now\n• AI will automatically re-enable in 10 minutes\n• Or wait 30+ minutes and refresh the page",
           { 
             autoClose: 20000,
+            position: "top-center",
+            style: {
+              fontSize: '14px',
+              lineHeight: '1.4'
+            }
+          }
+        );
+      } else if (error.response?.status === 404) {
+        toast.error(
+          "🔑 API Configuration Error!\n\n❌ Gemini API endpoint not found (404)\n\n🔧 Possible issues:\n• API key is invalid or expired\n• Generative AI API not enabled in Google Cloud\n• Billing not set up for your Google Cloud project\n• API key lacks necessary permissions\n\n💡 Try: Create a new API key with Generative AI permissions",
+          { 
+            autoClose: 15000,
             position: "top-center",
             style: {
               fontSize: '14px',
