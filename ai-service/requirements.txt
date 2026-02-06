@@ -4,7 +4,7 @@ python-dotenv
 google-generativeai
 sentence-transformers
 chromadb
-psycopg2-binary  # For connecting to PostgreSQL
+pymongo  # For connecting to MongoDB
 beautifulsoup4
 requests
 grpcio 

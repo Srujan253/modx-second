@@ -15,9 +15,17 @@ from core import orchestrator
 class AIServiceServicer(ai_pb2_grpc.AIServiceServicer):
     # This method handles the GetChatbotResponse RPC call.
     def GetChatbotResponse(self, request, context):
-        print(f"gRPC Server: Received query: '{request.query}'")
-        answer_text = orchestrator.process_query(request.query)
-        return ai_pb2.ChatReply(answer=answer_text)
+        try:
+            print(f"gRPC Server: Received query: '{request.query}'")
+            answer_text = orchestrator.process_query(request.query)
+            return ai_pb2.ChatReply(answer=answer_text)
+        except Exception as e:
+            print(f"Error in GetChatbotResponse: {e}")
+            import traceback
+            traceback.print_exc()
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            return ai_pb2.ChatReply(answer="An error occurred in the AI service.")
     
     def GetUserRecommendations(self, request, context):
         # Fetch up to 10 personalized recommendations for the Explore page

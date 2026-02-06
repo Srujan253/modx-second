@@ -91,20 +91,6 @@ router.post("/:projectId/rate", protect, projectController.submitProjectRating);
 // Add mentor role
 router.post("/:projectId/mentor", protect, projectController.addMentorRole);
 
-// Get project messages
-router.get(
-  "/:projectId/messages",
-  protect,
-  projectController.getProjectMessages
-);
-
-// Post a new message
-router.post(
-  "/:projectId/messages",
-  protect,
-  projectController.postProjectMessage
-);
-
 // Get project details (protected route)
 router.get("/:projectId", protect, projectController.getProjectDetails);
 

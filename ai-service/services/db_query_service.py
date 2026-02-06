@@ -1,18 +1,19 @@
 # File: services/db_query_service.py
-import psycopg2
 import json
-from core.config import DATABASE_URL
+from database import get_mongodb_connection
 
-def _execute_query(query, params=None):
-    """A helper function to connect to the DB, run a query, and return results."""
+def _execute_query_mongodb(collection_name, query_filter, projection=None):
+    """Helper function to query MongoDB and return results"""
     try:
-        conn = psycopg2.connect(DATABASE_URL)
-        cur = conn.cursor()
-        cur.execute(query, params or ())
-        colnames = [desc[0] for desc in cur.description]
-        results = [dict(zip(colnames, row)) for row in cur.fetchall()]
-        cur.close()
-        conn.close()
+        db = get_mongodb_connection()
+        collection = db[collection_name]
+        results = list(collection.find(query_filter, projection))
+        
+        # Convert ObjectId to string for JSON serialization
+        for result in results:
+            if '_id' in result:
+                result['_id'] = str(result['_id'])
+        
         return results
     except Exception as e:
         print(f"Database error: {e}")
@@ -26,22 +27,26 @@ def find_projects(skill: str = None, title: str = None) -> str:
     if not skill and not title:
         return json.dumps({"success": False, "message": "Please specify a skill or title to search for.", "data": []})
 
-    base_query = "SELECT title, description, required_skills, tech_stack FROM projects"
-    conditions = []
-    params = []
-
+    query_filter = {}
+    
     if title:
-        conditions.append("title ILIKE %s")
-        params.append(f"%{title}%")
+        # Case-insensitive regex search for title
+        query_filter['title'] = {'$regex': title, '$options': 'i'}
+    
     if skill:
-        # Case-insensitive search for skill in required_skills array
-        conditions.append("EXISTS (SELECT 1 FROM UNNEST(required_skills) s WHERE s ILIKE %s)")
-        params.append(skill)
-
-    if conditions:
-        base_query += " WHERE " + " AND ".join(conditions)
-
-    results = _execute_query(base_query, params)
+        # Case-insensitive search in requiredSkills array
+        query_filter['requiredSkills'] = {'$regex': skill, '$options': 'i'}
+    
+    # If both are specified, use AND logic
+    if title and skill:
+        query_filter = {'$and': [
+            {'title': {'$regex': title, '$options': 'i'}},
+            {'requiredSkills': {'$regex': skill, '$options': 'i'}}
+        ]}
+    
+    projection = {'title': 1, 'description': 1, 'requiredSkills': 1, 'techStack': 1, '_id': 0}
+    results = _execute_query_mongodb('projects', query_filter, projection)
+    
     if results is None:
         return json.dumps({"success": False, "message": "Database error occurred.", "data": []})
     if not results:
@@ -53,21 +58,26 @@ def find_users(role: str = None, interest: str = None) -> str:
     if not role and not interest:
         return json.dumps({"success": False, "message": "Please specify a role or interest to search for.", "data": []})
 
-    base_query = "SELECT full_name, roles, interest FROM users"
-    conditions = []
-    params = []
-
+    query_filter = {}
+    
     if role:
-        conditions.append("%s = ANY(roles)")
-        params.append(role)
+        # Search in roles array
+        query_filter['roles'] = role
+    
     if interest:
-        conditions.append("interest ILIKE %s")
-        params.append(f"%{interest}%")
-
-    if conditions:
-        base_query += " WHERE " + " AND ".join(conditions)
-
-    results = _execute_query(base_query, params)
+        # Case-insensitive regex search for interest
+        query_filter['interest'] = {'$regex': interest, '$options': 'i'}
+    
+    # If both are specified, use AND logic
+    if role and interest:
+        query_filter = {'$and': [
+            {'roles': role},
+            {'interest': {'$regex': interest, '$options': 'i'}}
+        ]}
+    
+    projection = {'fullName': 1, 'roles': 1, 'interest': 1, '_id': 0}
+    results = _execute_query_mongodb('users', query_filter, projection)
+    
     if results is None:
         return json.dumps({"success": False, "message": "Database error occurred.", "data": []})
     if not results:

@@ -1,25 +1,26 @@
-const db = require("../db");
+const Task = require("../models/Task");
+const Project = require("../models/Project");
+const ProjectMember = require("../models/ProjectMember");
 
 // Create a new task
 exports.createTask = async (req, res) => {
   const { projectId } = req.params;
   const { assigned_to, title, description, status, deadline } = req.body;
-  const assigned_by = req.user.id; // Assumes auth middleware sets req.user
+  const assigned_by = req.user.id;
 
   try {
-    // Check if user is project leader or mentor
-    const project = await db.query("SELECT * FROM projects WHERE id = $1", [
-      projectId,
-    ]);
-    if (!project.rows.length)
-      return res.status(404).json({ error: "Project not found" });
+    // Check if project exists
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ error: "Project not found" });
 
     // Check if user is leader or mentor in project_members
-    const roleRes = await db.query(
-      "SELECT role FROM project_members WHERE project_id = $1 AND member_id = $2 AND status = $3",
-      [projectId, assigned_by, "accepted"]
-    );
-    const userRole = roleRes.rows[0]?.role;
+    const userMembership = await ProjectMember.findOne({
+      projectId,
+      memberId: assigned_by,
+      status: "accepted",
+    });
+
+    const userRole = userMembership?.role;
     if (userRole !== "leader" && userRole !== "mentor") {
       return res
         .status(403)
@@ -27,28 +28,28 @@ exports.createTask = async (req, res) => {
     }
 
     // Check if assigned_to is a member of the project
-    const member = await db.query(
-      "SELECT * FROM project_members WHERE project_id = $1 AND member_id = $2 AND status = $3",
-      [projectId, assigned_to, "accepted"]
-    );
-    if (!member.rows.length)
+    const memberExists = await ProjectMember.findOne({
+      projectId,
+      memberId: assigned_to,
+      status: "accepted",
+    });
+
+    if (!memberExists)
       return res
         .status(400)
         .json({ error: "Assigned user is not a project member" });
 
-    const result = await db.query(
-      "INSERT INTO tasks (project_id, assigned_to, assigned_by, title, description, status, deadline, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *",
-      [
-        projectId,
-        assigned_to,
-        assigned_by,
-        title,
-        description,
-        status || "pending",
-        deadline,
-      ]
-    );
-    res.status(201).json(result.rows[0]);
+    const newTask = await Task.create({
+      projectId,
+      assignedTo: assigned_to,
+      assignedBy: assigned_by,
+      title,
+      description,
+      status: status || "pending",
+      deadline,
+    });
+
+    res.status(201).json(newTask);
   } catch (err) {
     res
       .status(500)
@@ -60,11 +61,8 @@ exports.createTask = async (req, res) => {
 exports.getProjectTasks = async (req, res) => {
   const { projectId } = req.params;
   try {
-    const result = await db.query(
-      "SELECT * FROM tasks WHERE project_id = $1 ORDER BY created_at DESC",
-      [projectId]
-    );
-    res.json(result.rows);
+    const tasks = await Task.find({ projectId }).sort({ createdAt: -1 });
+    res.json(tasks);
   } catch (err) {
     res
       .status(500)
@@ -77,13 +75,20 @@ exports.updateTask = async (req, res) => {
   const { projectId, taskId } = req.params;
   const { status, deadline, title, description } = req.body;
   try {
-    const result = await db.query(
-      "UPDATE tasks SET status = COALESCE($1, status), deadline = COALESCE($2, deadline), title = COALESCE($3, title), description = COALESCE($4, description) WHERE id = $5 AND project_id = $6 RETURNING *",
-      [status, deadline, title, description, taskId, projectId]
+    const updateFields = {};
+    if (status) updateFields.status = status;
+    if (deadline) updateFields.deadline = deadline;
+    if (title) updateFields.title = title;
+    if (description) updateFields.description = description;
+
+    const task = await Task.findOneAndUpdate(
+      { _id: taskId, projectId },
+      updateFields,
+      { new: true, runValidators: true }
     );
-    if (!result.rows.length)
-      return res.status(404).json({ error: "Task not found" });
-    res.json(result.rows[0]);
+
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    res.json(task);
   } catch (err) {
     res
       .status(500)
@@ -95,12 +100,8 @@ exports.updateTask = async (req, res) => {
 exports.deleteTask = async (req, res) => {
   const { projectId, taskId } = req.params;
   try {
-    const result = await db.query(
-      "DELETE FROM tasks WHERE id = $1 AND project_id = $2 RETURNING *",
-      [taskId, projectId]
-    );
-    if (!result.rows.length)
-      return res.status(404).json({ error: "Task not found" });
+    const task = await Task.findOneAndDelete({ _id: taskId, projectId });
+    if (!task) return res.status(404).json({ error: "Task not found" });
     res.json({ message: "Task deleted" });
   } catch (err) {
     res

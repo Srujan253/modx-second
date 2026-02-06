@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const sendToken = (user, statusCode, res, message) => {
   const token = jwt.sign(
-    { id: user.id, role: user.role },
+    { id: user._id || user.id, role: user.role },
     process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRES_IN,
@@ -26,8 +26,8 @@ const sendToken = (user, statusCode, res, message) => {
       message,
       // We no longer send the token in the body, but we can still send user info
       user: {
-        id: user.id,
-        fullName: user.full_name,
+        id: user._id || user.id,
+        fullName: user.fullName || user.full_name,
         email: user.email,
         role: user.role,
       },

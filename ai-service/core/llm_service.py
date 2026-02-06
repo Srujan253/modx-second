@@ -82,7 +82,7 @@ tools = [
 
 # --- 4. INITIALIZE THE MODEL WITH THE SYSTEM PROMPT AND TOOLS ---
 model = genai.GenerativeModel(
-    model_name='gemini-2.5-flash',
+    model_name='gemini-1.5-flash',
     tools=tools,
     system_instruction=system_prompt
 )
@@ -123,9 +123,14 @@ def generate_answer(query):
 
             # Send the tool's response back to the model for a final, natural language answer
             final_response = chat.send_message(
-                [genai.protos.Part(
-                    function_response={'name': tool_name, 'response': {'result': tool_response_str}}
-                )]
+                genai.protos.Content(
+                    parts=[genai.protos.Part(
+                        function_response=genai.protos.FunctionResponse(
+                            name=tool_name,
+                            response={'result': tool_response_str}
+                        )
+                    )]
+                )
             )
             return final_response.candidates[0].content.parts[0].text
         else:
