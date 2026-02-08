@@ -348,10 +348,11 @@ const ProjectCreation = () => {
       throw new Error("Gemini API key not found");
     }
 
+
     console.log("🔑 Using Gemini API Key:", GEMINI_API_KEY.substring(0, 20) + "...");
 
-    // Try the latest Gemini API endpoint first
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+    // Use gemini-2.5-flash (same as AI service primary model)
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     console.log("🌐 API Endpoint:", apiUrl.replace(GEMINI_API_KEY, "***"));
 
     return await axios.post(
