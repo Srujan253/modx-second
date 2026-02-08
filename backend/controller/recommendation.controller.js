@@ -22,13 +22,32 @@ const extractProjectIds = (idStrings) => {
 const fetchFullProjectDetails = async (projectIds) => {
   if (!projectIds || projectIds.length === 0) return [];
 
-  const projects = await Project.find({ _id: { $in: projectIds } }).lean();
+  const projects = await Project.find({ _id: { $in: projectIds } })
+    .populate("leaderId", "fullName")
+    .lean();
 
   // Create a map: id -> project
   const projectMap = new Map(projects.map((p) => [p._id.toString(), p]));
 
-  // Reconstruct array in the order of projectIds
-  return projectIds.map((id) => projectMap.get(id)).filter(Boolean);
+  // Reconstruct array in the order of projectIds and add field mappings
+  return projectIds.map((id) => {
+    const project = projectMap.get(id);
+    if (!project) return null;
+    
+    // Add field mappings for frontend compatibility
+    return {
+      ...project,
+      id: project._id.toString(),
+      project_image: project.projectImage,
+      required_skills: project.requiredSkills,
+      tech_stack: project.techStack,
+      max_members: project.maxMembers,
+      leader_name: project.leaderId?.fullName,
+      leader_id: project.leaderId?._id.toString(),
+      created_at: project.createdAt,
+      updated_at: project.updatedAt,
+    };
+  }).filter(Boolean);
 };
 
 // 1. For the Explore Page (Personalized)

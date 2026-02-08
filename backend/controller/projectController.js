@@ -159,7 +159,7 @@ exports.getUserInvites = async (req, res) => {
           id: inv._id,
           project_id: inv.projectId._id,
           project_title: inv.projectId.title,
-          leader_name: project.leaderId.fullName,
+          leader_name: project.leaderId?.fullName || "Unknown",
         };
       })
     );
@@ -345,7 +345,7 @@ exports.getProjectDetailsPublic = async (req, res) => {
 
     const formattedProject = {
       ...project,
-      leader_name: project.leaderId.fullName,
+      leader_name: project.leaderId?.fullName || "Unknown",
     };
 
     res.status(200).json({ success: true, project: formattedProject });
@@ -412,8 +412,8 @@ exports.exploreProjects = async (req, res) => {
 
         return addIdField({
           ...project,
-          leader_name: project.leaderId.fullName,
-          leader_id: project.leaderId._id.toString(),
+          leader_name: project.leaderId?.fullName || "Unknown",
+          leader_id: project.leaderId?._id.toString(),
           member_count: memberCount,
           avg_rating: project.rating || "N/A",
         });
@@ -576,9 +576,21 @@ exports.createProject = async (req, res) => {
     
     // Upload image to Cloudinary if provided
     if (projectImage) {
-      const { uploadBase64ToCloudinary } = require("../utils/uploadToCloudinary");
-      imageUrl = await uploadBase64ToCloudinary(projectImage, "modx/projects");
+      console.log("🖼️ Project image provided, uploading to Cloudinary...");
+      try {
+        const { uploadBase64ToCloudinary } = require("../utils/uploadToCloudinary");
+        imageUrl = await uploadBase64ToCloudinary(projectImage, "modx/projects");
+        console.log("✅ Image uploaded successfully:", imageUrl);
+      } catch (uploadError) {
+        console.error("❌ Cloudinary upload failed:", uploadError.message);
+        // Don't fail the entire project creation, just log the error
+        // and continue without the image
+        console.log("⚠️ Continuing project creation without image");
+      }
+    } else {
+      console.log("ℹ️ No project image provided");
     }
+    
     const projectCount = await Project.countDocuments({ leaderId: userId });
 
     if (projectCount >= 6) {
@@ -598,6 +610,7 @@ exports.createProject = async (req, res) => {
 
     const timelineInt = timeline ? parseInt(timeline, 10) : null;
 
+    console.log("💾 Creating project with imageUrl:", imageUrl);
     const newProject = await Project.create({
       title,
       description,
@@ -609,6 +622,9 @@ exports.createProject = async (req, res) => {
       projectImage: imageUrl,
       leaderId: userId,
     });
+
+    console.log("✅ Project created with ID:", newProject._id);
+    console.log("📸 Project image URL saved:", newProject.projectImage);
 
     const projectId = newProject._id;
 
@@ -633,8 +649,13 @@ exports.createProject = async (req, res) => {
       projectId,
     });
   } catch (error) {
-    console.error("Error creating project:", error);
-    res.status(500).json({ message: "Server error during project creation." });
+    console.error("❌ Error creating project:", error);
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error during project creation.",
+      error: error.message 
+    });
   }
 };
 
@@ -736,7 +757,7 @@ exports.getProjectDetails = async (req, res) => {
 
     const formattedProject = {
       ...project,
-      leader_name: project.leaderId.fullName,
+      leader_name: project.leaderId?.fullName || "Unknown",
       memberCount: memberCount + 1, // +1 for the leader
     };
 

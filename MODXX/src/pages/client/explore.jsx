@@ -17,7 +17,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
 // Helper to get the image URL for a project
 function getImageUrl(imagePath) {
-  if (!imagePath) return "/path/to/your/default/placeholder.png"; // Provide a valid placeholder path
+  if (!imagePath) return "https://placehold.co/600x400/1f2937/d1d5db?text=Project+Image";
   if (imagePath.startsWith("http")) return imagePath;
   return `${API_URL}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
 }

@@ -429,21 +429,55 @@ const ProjectCreation = () => {
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      // If user selected a file, append it
-      if (data.projectImage && data.projectImage[0]) {
-        formData.set("projectImage", data.projectImage[0]);
+      console.log("📝 Form data received:", data);
+      console.log("🖼️ Project image field:", data.projectImage);
+      
+      // Convert image to base64 if present
+      let projectImageBase64 = null;
+      
+      // Handle File object (not FileList anymore)
+      if (data.projectImage instanceof File) {
+        const file = data.projectImage;
+        console.log("✅ Image file found:", file);
+        
+        projectImageBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            console.log("📤 Base64 conversion complete, size:", reader.result.length);
+            resolve(reader.result);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      } else {
+        console.log("❌ No image file found in form data");
       }
-      const response = await axios.post(`${API_URL}/project`, formData, {
+
+      // Prepare data for submission
+      const submitData = {
+        title: data.title,
+        description: data.description,
+        goals: data.goals,
+        timeline: data.timeline,
+        requiredSkills: data.requiredSkills,
+        techStack: data.techStack,
+        maxMembers: data.maxMembers,
+        projectImage: projectImageBase64, // Send base64 string
+      };
+
+      console.log("📦 Sending data to backend:", {
+        ...submitData,
+        projectImage: projectImageBase64 ? `base64 string (${projectImageBase64.length} chars)` : null
+      });
+
+      const response = await axios.post(`${API_URL}/project`, submitData, {
         withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "application/json" },
       });
       toast.success("🎉 " + response.data.message);
       navigate(`/dashboard`);
     } catch (error) {
+      console.error("❌ Project creation error:", error);
       toast.error(error.response?.data?.message || "Project creation failed.");
     } finally {
       setIsSubmitting(false);
@@ -454,8 +488,12 @@ const ProjectCreation = () => {
     const file = e.target.files[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
+      // IMPORTANT: Store the actual File object, not the FileList reference
+      // FileList is a live reference and can become empty
+      setValue("projectImage", file);
     } else {
       setPreview(null);
+      setValue("projectImage", null);
     }
   };
 
@@ -477,7 +515,7 @@ const ProjectCreation = () => {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       if (file.type.startsWith('image/')) {
-        setValue("projectImage", e.dataTransfer.files);
+        setValue("projectImage", file); // Store File object, not FileList
         setPreview(URL.createObjectURL(file));
       }
     }
