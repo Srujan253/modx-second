@@ -106,7 +106,18 @@ const ProjectDetails = () => {
     );
   }
 
-  const isLeader = project.leader_id === user?.id;
+  // Check if current user is the project leader
+  // Backend populates leaderId as an object with {_id, fullName}, so we need to access ._id
+  const leaderIdValue = typeof project.leaderId === 'object' 
+    ? project.leaderId?._id 
+    : project.leaderId;
+  const isLeader = leaderIdValue?.toString() === user?.id?.toString();
+  console.log("🔍 Leader check:", {
+    projectLeaderId: project.leaderId,
+    leaderIdValue,
+    userId: user?.id,
+    isLeader
+  });
   const getImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith("/uploads/")) {
