@@ -12,6 +12,15 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    username: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null values while maintaining uniqueness for non-null values
+    },
+    profileImageUrl: {
+      type: String,
+      default: null,
+    },
     passwordHash: {
       type: String,
       required: true,
@@ -20,11 +29,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    interest: {
-      type: String,
-    },
-    otherInterest: {
-      type: String,
+    interests: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(arr) {
+          return arr.length <= 3;
+        },
+        message: 'Maximum 3 interests allowed'
+      }
     },
     otpCode: {
       type: String,

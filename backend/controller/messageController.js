@@ -34,12 +34,16 @@ exports.getProjectMessages = async (req, res) => {
 
     // Transform to match expected format
     const formattedMessages = messages.map((msg) => ({
-      ...msg.toObject(),
+      id: msg._id.toString(),
+      sender_id: msg.senderId._id.toString(),
       sender_name: msg.senderId.fullName,
+      message_text: msg.messageText,
+      sent_at: msg.sentAt,
     }));
 
     res.json({ success: true, messages: formattedMessages });
   } catch (err) {
+    console.error("Error fetching messages:", err);
     res.status(500).json({ success: false, message: "Server error." });
   }
 };

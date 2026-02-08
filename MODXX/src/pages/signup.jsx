@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import TagInput from "../components/TagInput";
 import { 
   User, 
   Mail, 
@@ -110,8 +111,7 @@ const SignupPage = () => {
     email: "",
     password: "",
     role: "Developer",
-    interest: "",
-    otherInterest: "",
+    interests: [],
     otp: "",
   });
   const [error, setError] = useState("");
@@ -170,9 +170,7 @@ const SignupPage = () => {
   };
 
   const validateStep2 = () => {
-    return formData.role && 
-           formData.interest && 
-           (formData.interest !== "Other" || formData.otherInterest.trim());
+    return formData.role && formData.interests.length > 0;
   };
 
   const handleInterestSelect = (interest) => {
@@ -206,8 +204,7 @@ const SignupPage = () => {
           email: formData.email,
           password: formData.password,
           role: formData.role,
-          interest: formData.interest === "Other" ? formData.otherInterest : formData.interest,
-          otherInterest: formData.otherInterest,
+          interests: formData.interests,
         });
         setStep(step + 1);
       } catch (err) {
@@ -367,49 +364,17 @@ const SignupPage = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
             >
               <label className="block text-sm font-medium text-gray-300 mb-3">
-                What is your main interest?
+                What are your interests? (Max 3)
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                {availableInterests.map((interest) => (
-                  <motion.button
-                    type="button"
-                    key={interest.id}
-                    onClick={() => handleInterestSelect(interest)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`flex items-center gap-2 p-3 rounded-lg border text-sm font-medium transition-all duration-200 ${
-                      formData.interest === interest.name
-                        ? "border-orange-500 bg-orange-500/10 text-orange-400"
-                        : "border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500"
-                    }`}
-                  >
-                    <span>{interest.icon}</span>
-                    <span>{interest.name}</span>
-                  </motion.button>
-                ))}
-              </div>
-              
-              <AnimatePresence>
-                {formData.interest === "Other" && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-4 overflow-hidden"
-                  >
-                    <FormInput
-                      label="Please specify your interest"
-                      name="otherInterest"
-                      type="text"
-                      value={formData.otherInterest}
-                      onChange={handleChange}
-                      placeholder="Your interest"
-                      delay={0.1}
-                      icon={Sparkles}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <TagInput
+                tags={formData.interests}
+                setTags={(interests) => setFormData({ ...formData, interests })}
+                maxTags={3}
+                placeholder="Type and press Enter to add interests..."
+              />
+              <p className="text-xs text-slate-400 mt-2">
+                💡 Examples: Web Development, AI/ML, UI/UX Design, Mobile Apps, etc.
+              </p>
             </motion.div>
           </motion.div>
         );

@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 const connectDB = require("./config/database");
 const app = express();
 
@@ -29,7 +31,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // --- MIDDLEWARE ---
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser()); // Use cookie-parser to read cookies from requests
 
 // --- ROUTES ---
@@ -51,7 +54,22 @@ app.get("/", (req, res) => {
   res.send("MoDX Backend is running!");
 });
 
+// --- CREATE HTTP SERVER ---
+const server = http.createServer(app);
+
+// --- SOCKET.IO SETUP ---
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+
+// Import socket handlers
+require("./socketHandlers")(io);
+
 // --- SERVER STARTUP ---
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
+  console.log(`Socket.IO is ready for real-time messaging`);
 });

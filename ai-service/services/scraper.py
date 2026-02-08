@@ -3,11 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 import google.generativeai as genai
 from core.config import GEMINI_API_KEY
+from core.model_manager import ModelManager
 import concurrent.futures
 
 # Configure the Gemini client for summarization
 genai.configure(api_key=GEMINI_API_KEY)
-summarization_model = genai.GenerativeModel('gemini-1.5-flash')
+summarization_model = ModelManager()
 
 # --- Helper Functions ---
 

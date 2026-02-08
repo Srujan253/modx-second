@@ -22,12 +22,24 @@ def _execute_query_mongodb(collection_name, query_filter, projection=None):
 # --- Define the "Tools" that query your database ---
 
 def find_projects(skill: str = None, title: str = None) -> str:
-    """Finds projects in the MoDX database based on a skill or title."""
+    """Finds projects in the MoDX database based on a skill or title. If no parameters are provided, returns all projects."""
     print("find_projects called with:", skill, title)
-    if not skill and not title:
-        return json.dumps({"success": False, "message": "Please specify a skill or title to search for.", "data": []})
-
+    
     query_filter = {}
+    
+    # If no parameters provided, return all projects (limited to avoid overwhelming response)
+    if not skill and not title:
+        projection = {'title': 1, 'description': 1, 'requiredSkills': 1, 'techStack': 1, '_id': 1}
+        results = _execute_query_mongodb('projects', {}, projection)
+        
+        if results is None:
+            return json.dumps({"success": False, "message": "Database error occurred.", "data": []})
+        if not results:
+            return json.dumps({"success": True, "message": "No projects found in the database.", "data": []})
+        
+        # Limit to 20 projects to avoid overwhelming the response
+        limited_results = results[:20]
+        return json.dumps({"success": True, "message": f"Found {len(results)} total projects. Showing first {len(limited_results)}.", "data": limited_results})
     
     if title:
         # Case-insensitive regex search for title
@@ -44,7 +56,7 @@ def find_projects(skill: str = None, title: str = None) -> str:
             {'requiredSkills': {'$regex': skill, '$options': 'i'}}
         ]}
     
-    projection = {'title': 1, 'description': 1, 'requiredSkills': 1, 'techStack': 1, '_id': 0}
+    projection = {'title': 1, 'description': 1, 'requiredSkills': 1, 'techStack': 1, '_id': 1}
     results = _execute_query_mongodb('projects', query_filter, projection)
     
     if results is None:

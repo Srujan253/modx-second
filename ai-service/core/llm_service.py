@@ -1,5 +1,6 @@
 import google.generativeai as genai
 from core.config import GEMINI_API_KEY
+from core.model_manager import ModelManager
 from services import scraper, db_query_service, vector_store
 import json
 
@@ -71,7 +72,7 @@ def find_projects_by_concept(concept: str) -> str:
     """
     print(f"LLM Service: Using RAG to find projects related to '{concept}'")
     # This now calls the corrected function name in your vector_store
-    return vector_store.find_similar_documents(concept)
+    return vector_store.find_similar_document_ids(concept)
 
 tools = [
     find_projects_by_concept,
@@ -80,9 +81,8 @@ tools = [
     scraper.scrape_for_info,
 ]
 
-# --- 4. INITIALIZE THE MODEL WITH THE SYSTEM PROMPT AND TOOLS ---
-model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
+# --- 4. INITIALIZE THE MODEL MANAGER WITH AUTOMATIC FALLBACK ---
+model_manager = ModelManager(
     tools=tools,
     system_instruction=system_prompt
 )
@@ -94,7 +94,7 @@ def generate_answer(query):
     use a specific tool for factual data. If no tool is chosen, it falls back
     to the RAG system for conceptual questions.
     """
-    chat = model.start_chat(history=few_shot_examples)
+    chat = model_manager.start_chat(history=few_shot_examples)
     
     # --- Step 1: Try to use a tool first ---
     response = chat.send_message(query)
@@ -116,7 +116,7 @@ def generate_answer(query):
                 tool_response_data = json.loads(tool_response_str)
                 if isinstance(tool_response_data, list) and not tool_response_data:
                     suggestion_prompt = f"The user searched for '{query}', but the database returned no results. Is there a likely spelling mistake in the query? If so, suggest the correct spelling. If not, just say you couldn't find anything."
-                    suggestion_response = model.generate_content(suggestion_prompt)
+                    suggestion_response = model_manager.generate_content(suggestion_prompt)
                     return suggestion_response.text
             except (json.JSONDecodeError, TypeError):
                 pass # The response was not a JSON list, so proceed normally.
@@ -140,7 +140,7 @@ def generate_answer(query):
         # --- Step 2: Fallback to RAG for conceptual questions ---
         print("LLM did not choose a tool, falling back to RAG for a conceptual answer.")
         
-        conceptual_context = vector_store.find_similar_documents(query)
+        conceptual_context = vector_store.find_similar_document_ids(query)
         
         final_prompt = f"""
         Answer the user's query based on the following context from the platform's knowledge base.
@@ -151,5 +151,5 @@ def generate_answer(query):
         User Query:
         {query}
         """
-        final_response = model.generate_content(final_prompt)
+        final_response = model_manager.generate_content(final_prompt)
         return final_response.text

@@ -1,5 +1,6 @@
 const Project = require("../models/Project");
 const User = require("../models/User");
+const mongoose = require("mongoose");
 const {
   getUserRecommendations,
   getRelatedProjects,
@@ -8,13 +9,13 @@ const {
 const ErrorHandler = require("../utils/errorHandler");
 
 // Helper function to extract numerical IDs from strings like "project_123"
-// MongoDB uses ObjectIds, so we need to adapt this
+// MongoDB uses ObjectIds, so we need to validate them
 const extractProjectIds = (idStrings) => {
   if (!Array.isArray(idStrings)) return [];
   return idStrings
     .filter((id) => id && id.startsWith("project_"))
     .map((id) => id.split("_")[1])
-    .filter((id) => id);
+    .filter((id) => id && mongoose.Types.ObjectId.isValid(id));
 };
 
 // Helper function to fetch full project details from a list of IDs
@@ -96,10 +97,19 @@ exports.recommendForUser = async (req, res, next) => {
 exports.recommendRelated = async (req, res, next) => {
   try {
     const currentProjectId = req.params.id;
-    const project = await Project.findById(currentProjectId).select("title description");
+
+    if (!mongoose.Types.ObjectId.isValid(currentProjectId)) {
+      return next(new ErrorHandler("Invalid project ID.", 400));
+    }
+
+    const project = await Project.findById(currentProjectId).select(
+      "title description techStack requiredSkills"
+    );
     if (!project) return next(new ErrorHandler("Project not found.", 404));
 
-    const projectText = `Project titled "${project.title}" with description: ${project.description}`;
+    const skillsStr = project.requiredSkills?.join(", ") || "";
+    const techStr = project.techStack?.join(", ") || "";
+    const projectText = `Project titled "${project.title}" with description: ${project.description}. Technologies: ${techStr}. Skills: ${skillsStr}`;
 
     // Step 1: Get the top 6 related project IDs from the AI service
     const response = await getRelatedProjects(projectText);

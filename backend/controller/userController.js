@@ -20,7 +20,7 @@ exports.getUserPublicProfile = async (req, res) => {
 
 // Handles Step 1 & 2: Register user and send OTP
 exports.register = async (req, res) => {
-  const { fullName, email, password, role, interest, otherInterest } = req.body;
+  const { fullName, email, password, role, interests } = req.body;
   try {
     // First, delete any previous unverified attempts with the same email
     await User.deleteMany({ email, isVerified: false });
@@ -35,8 +35,7 @@ exports.register = async (req, res) => {
       email,
       passwordHash,
       role,
-      interest,
-      otherInterest,
+      interests: interests || [],
       otpCode: otp,
       otpExpiresAt: otpExpires,
     });
@@ -109,7 +108,22 @@ exports.getMe = async (req, res) => {
         .json({ success: false, message: "User not found." });
     }
 
-    res.status(200).json({ success: true, user });
+    // Transform to match frontend expectations (snake_case)
+    const transformedUser = {
+      id: user._id,
+      _id: user._id,
+      full_name: user.fullName,
+      email: user.email,
+      username: user.username,
+      profile_image_url: user.profileImageUrl,
+      role: user.role,
+      interests: user.interests || [],
+      is_verified: user.isVerified,
+      created_at: user.createdAt,
+      updated_at: user.updatedAt,
+    };
+
+    res.status(200).json({ success: true, user: transformedUser });
   } catch (error) {
     console.error("Error in getMe:", error);
     res.status(500).json({ message: "Server Error" });
@@ -139,18 +153,40 @@ exports.login = async (req, res) => {
 
 // Update user profile
 exports.updateMe = async (req, res) => {
-  const { full_name, role, interest, other_interest } = req.body;
+  const { full_name, role, interests, profileImage } = req.body;
+  console.log("📝 Update profile request received");
+  console.log("Profile image present:", !!profileImage);
+  
   try {
+    const updateData = {
+      fullName: full_name,
+      role,
+      interests: interests || [],
+    };
+
+    // If profile image is provided, upload to Cloudinary
+    if (profileImage) {
+      console.log("🖼️ Uploading image to Cloudinary...");
+      try {
+        const { uploadBase64ToCloudinary } = require("../utils/uploadToCloudinary");
+        const imageUrl = await uploadBase64ToCloudinary(profileImage, "modx/profiles");
+        console.log("✅ Image uploaded successfully:", imageUrl);
+        updateData.profileImageUrl = imageUrl;
+      } catch (uploadError) {
+        console.error("❌ Cloudinary upload error:", uploadError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Failed to upload image to Cloudinary",
+          error: uploadError.message 
+        });
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      {
-        fullName: full_name,
-        role,
-        interest,
-        otherInterest: other_interest,
-      },
+      updateData,
       { new: true, runValidators: true }
-    ).select("_id fullName role interest otherInterest");
+    ).select("_id fullName role interests profileImageUrl");
 
     if (!user) {
       return res
@@ -158,15 +194,17 @@ exports.updateMe = async (req, res) => {
         .json({ success: false, message: "User not found." });
     }
 
+    console.log("✅ Profile updated successfully");
+
     triggerIndexing().catch((err) =>
       console.error("Indexing error after update:", err)
     );
 
     res.status(200).json({ success: true, user });
   } catch (error) {
-    console.error("Error updating profile:", error);
+    console.error("❌ Error updating profile:", error);
     res
       .status(500)
-      .json({ success: false, message: "Server error updating profile." });
+      .json({ success: false, message: "Server error updating profile.", error: error.message });
   }
 };

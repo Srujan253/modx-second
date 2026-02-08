@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
+import TagInput from "../components/TagInput";
 import {
   User,
   Mail,
@@ -34,11 +35,13 @@ const Profile = () => {
   const [editForm, setEditForm] = useState({
     username: "",
     role: "",
-    interest: "",
-    other_interest: "",
+    interests: [],
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Initialize edit form when user data is available
   useEffect(() => {
@@ -46,8 +49,7 @@ const Profile = () => {
       setEditForm({
         username: user.full_name || "",
         role: user.role || "",
-        interest: user.interest || "",
-        other_interest: user.other_interest || "",
+        interests: user.interests || [],
       });
     }
   }, [user]);
@@ -61,14 +63,20 @@ const Profile = () => {
     setEditLoading(true);
     setEditError("");
     try {
+      const updateData = {
+        full_name: editForm.username,
+        role: editForm.role,
+        interests: editForm.interests,
+      };
+
+      // Add profile image if selected
+      if (profileImage) {
+        updateData.profileImage = profileImage;
+      }
+
       await axios.patch(
         `${API_URL}/users/me`,
-        {
-          full_name: editForm.username,
-          role: editForm.role,
-          interest: editForm.interest,
-          other_interest: editForm.other_interest,
-        },
+        updateData,
         { withCredentials: true }
       );
       window.location.reload();
@@ -76,6 +84,41 @@ const Profile = () => {
       setEditError("Failed to update profile.");
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size should be less than 5MB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Image = reader.result;
+        setImagePreview(base64Image);
+        
+        // Upload immediately
+        try {
+          console.log("Uploading image to Cloudinary...");
+          const response = await axios.patch(
+            `${API_URL}/users/me`,
+            { profileImage: base64Image },
+            { withCredentials: true }
+          );
+          console.log("Upload successful:", response.data);
+          
+          // Reload to show new image
+          window.location.reload();
+        } catch (err) {
+          console.error("Upload error:", err);
+          alert("Failed to upload image. Please try again.");
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -402,16 +445,28 @@ const Profile = () => {
                 className="relative group"
               >
                 <img
-                  src={`https://ui-avatars.com/api/?name=${user.full_name?.replace(
-                    /\s/g,
-                    "+"
-                  )}&background=222&color=FFF&size=128`}
+                  src={
+                    user.profile_image_url ||
+                    `https://ui-avatars.com/api/?name=${user.full_name?.replace(
+                      /\s/g,
+                      "+"
+                    )}&background=222&color=FFF&size=128`
+                  }
                   alt={user.full_name}
                   className="w-32 h-32 rounded-2xl border-4 border-gray-700 shadow-2xl object-cover bg-gray-800 group-hover:border-orange-500/50 transition-colors duration-300"
                 />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
+                  onClick={() => fileInputRef.current?.click()}
                   className="absolute -bottom-2 -right-2 w-10 h-10 bg-orange-500 hover:bg-orange-600 rounded-xl border-4 border-gray-800 flex items-center justify-center text-white shadow-lg transition-colors"
                 >
                   <Camera size={14} />
@@ -477,7 +532,7 @@ const Profile = () => {
               <ProfileInfo
                 icon={User}
                 label="Username"
-                value={user.full_name}
+                value={user.username || user.full_name}
               />
               <ProfileInfo
                 icon={Shield}
@@ -485,16 +540,31 @@ const Profile = () => {
                 value={user.role}
                 highlight
               />
-              <ProfileInfo
-                icon={MapPin}
-                label="Interest"
-                value={user.interest}
-              />
-              <ProfileInfo
-                icon={MapPin}
-                label="Other Interest"
-                value={user.other_interest}
-              />
+              
+              {/* Interests Display */}
+              {user.interests && user.interests.length > 0 && (
+                <div className="col-span-2">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50"
+                  >
+                    <p className="text-sm font-medium text-gray-400 mb-3">Interests</p>
+                    <div className="flex flex-wrap gap-2">
+                      {user.interests.map((interest, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1.5 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg text-sm font-medium shadow-md"
+                        >
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+              
               <ProfileInfo
                 icon={UserCheck}
                 label="Verified Status"
@@ -589,6 +659,30 @@ const Profile = () => {
                 Edit Profile
               </h2>
               <form onSubmit={handleEditSubmit} className="space-y-5">
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="flex justify-center mb-4">
+                    <div className="relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-24 h-24 rounded-xl object-cover border-2 border-orange-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagePreview(null);
+                          setProfileImage(null);
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="block text-gray-400 mb-1">Username</label>
                   <input
@@ -612,25 +706,12 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-400 mb-1">Interest</label>
-                  <input
-                    type="text"
-                    name="interest"
-                    value={editForm.interest}
-                    onChange={handleEditChange}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:border-orange-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-400 mb-1">
-                    Other Interest
-                  </label>
-                  <input
-                    type="text"
-                    name="other_interest"
-                    value={editForm.other_interest}
-                    onChange={handleEditChange}
-                    className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:border-orange-500 outline-none"
+                  <label className="block text-gray-400 mb-2">Interests (Max 3)</label>
+                  <TagInput
+                    tags={editForm.interests}
+                    setTags={(interests) => setEditForm({ ...editForm, interests })}
+                    maxTags={3}
+                    placeholder="Add your interests..."
                   />
                 </div>
                 {editError && (

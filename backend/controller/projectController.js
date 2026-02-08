@@ -567,15 +567,18 @@ exports.createProject = async (req, res) => {
     requiredSkills,
     techStack,
     maxMembers,
+    projectImage,
   } = req.body;
   const userId = req.user.id;
 
-  let projectImage = null;
-  if (req.file) {
-    projectImage = `/uploads/${req.file.filename}`;
-  }
-
   try {
+    let imageUrl = null;
+    
+    // Upload image to Cloudinary if provided
+    if (projectImage) {
+      const { uploadBase64ToCloudinary } = require("../utils/uploadToCloudinary");
+      imageUrl = await uploadBase64ToCloudinary(projectImage, "modx/projects");
+    }
     const projectCount = await Project.countDocuments({ leaderId: userId });
 
     if (projectCount >= 6) {
@@ -603,7 +606,7 @@ exports.createProject = async (req, res) => {
       requiredSkills: skillsArray,
       techStack: techArray,
       maxMembers: maxMembers || 8,
-      projectImage,
+      projectImage: imageUrl,
       leaderId: userId,
     });
 
@@ -725,9 +728,16 @@ exports.getProjectDetails = async (req, res) => {
         .json({ success: false, message: "Project not found." });
     }
 
+    // Count accepted members + leader
+    const memberCount = await ProjectMember.countDocuments({
+      projectId,
+      status: "accepted",
+    });
+
     const formattedProject = {
       ...project,
       leader_name: project.leaderId.fullName,
+      memberCount: memberCount + 1, // +1 for the leader
     };
 
     res.status(200).json({ success: true, project: formattedProject });
