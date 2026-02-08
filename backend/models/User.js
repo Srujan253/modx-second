@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    resumeUrl: {
+      type: String,
+      default: null,
+    },
     passwordHash: {
       type: String,
       required: true,

@@ -18,6 +18,8 @@ import {
   MapPin,
   Camera,
   Activity,
+  Upload,
+  FileText,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
@@ -42,6 +44,7 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+  const resumeInputRef = useRef(null);
 
   // Initialize edit form when user data is available
   useEffect(() => {
@@ -101,12 +104,17 @@ const Profile = () => {
         const base64Image = reader.result;
         setImagePreview(base64Image);
         
-        // Upload immediately
+        // Upload immediately with all existing user data
         try {
           console.log("Uploading image to Cloudinary...");
           const response = await axios.patch(
             `${API_URL}/users/me`,
-            { profileImage: base64Image },
+            { 
+              profileImage: base64Image,
+              full_name: user.full_name,
+              role: user.role,
+              interests: user.interests || []
+            },
             { withCredentials: true }
           );
           console.log("Upload successful:", response.data);
@@ -116,6 +124,56 @@ const Profile = () => {
         } catch (err) {
           console.error("Upload error:", err);
           alert("Failed to upload image. Please try again.");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleResumeChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Please upload a PDF or DOC file");
+        return;
+      }
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Resume size should be less than 5MB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        // reader.result is a data URL like: "data:application/pdf;base64,JVBERi0xLj..."
+        // We need to send just the base64 part to Cloudinary
+        const base64Resume = reader.result;
+        
+        try {
+          console.log("Uploading resume to Cloudinary...");
+          console.log("File type:", file.type);
+          console.log("File size:", file.size, "bytes");
+          
+          const response = await axios.patch(
+            `${API_URL}/users/me`,
+            { 
+              resume: base64Resume, // Send the full data URL - Cloudinary will handle it
+              full_name: user.full_name,
+              role: user.role,
+              interests: user.interests || []
+            },
+            { withCredentials: true }
+          );
+          console.log("Resume upload successful:", response.data);
+          
+          // Reload to show new resume
+          window.location.reload();
+        } catch (err) {
+          console.error("Resume upload error:", err);
+          alert("Failed to upload resume. Please try again.");
         }
       };
       reader.readAsDataURL(file);
@@ -542,15 +600,15 @@ const Profile = () => {
               />
               
               {/* Interests Display */}
-              {user.interests && user.interests.length > 0 && (
-                <div className="col-span-2">
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50"
-                  >
-                    <p className="text-sm font-medium text-gray-400 mb-3">Interests</p>
+              <div className="col-span-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50"
+                >
+                  <p className="text-sm font-medium text-gray-400 mb-3">Interests</p>
+                  {user.interests && user.interests.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {user.interests.map((interest, idx) => (
                         <span
@@ -561,9 +619,82 @@ const Profile = () => {
                         </span>
                       ))}
                     </div>
-                  </motion.div>
-                </div>
-              )}
+                  ) : (
+                    <p className="text-gray-500 text-sm italic">
+                      No interests added yet. Click "Edit" to add up to 3 interests.
+                    </p>
+                  )}
+                </motion.div>
+              </div>
+
+              {/* Resume Display */}
+              <div className="col-span-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-gray-400">Resume</p>
+                    <input
+                      type="file"
+                      ref={resumeInputRef}
+                      onChange={handleResumeChange}
+                      accept=".pdf,.doc,.docx"
+                      className="hidden"
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        console.log("Resume URL:", user.resume_url);
+                        resumeInputRef.current?.click();
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/80 hover:bg-orange-600 rounded-lg text-white text-sm font-medium transition-colors"
+                    >
+                      <Upload size={14} />
+                      {user.resume_url ? "Replace" : "Upload"}
+                    </motion.button>
+                  </div>
+                  {user.resume_url ? (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <a
+                          href={user.resume_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            console.log("Opening resume URL:", user.resume_url);
+                          }}
+                          className="flex items-center gap-2 text-orange-400 hover:text-orange-300 text-sm transition-colors"
+                        >
+                          <FileText size={16} />
+                          View Resume
+                        </a>
+                        <span className="text-gray-600">|</span>
+                        <a
+                          href={user.resume_url}
+                          download="resume.pdf"
+                          className="flex items-center gap-2 text-orange-400 hover:text-orange-300 text-sm transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Download
+                        </a>
+                      </div>
+                      <p className="text-xs text-gray-500 break-all">
+                        {user.resume_url}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm italic">
+                      No resume uploaded yet.
+                    </p>
+                  )}
+                </motion.div>
+              </div>
               
               <ProfileInfo
                 icon={UserCheck}

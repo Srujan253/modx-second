@@ -116,6 +116,7 @@ exports.getMe = async (req, res) => {
       email: user.email,
       username: user.username,
       profile_image_url: user.profileImageUrl,
+      resume_url: user.resumeUrl,
       role: user.role,
       interests: user.interests || [],
       is_verified: user.isVerified,
@@ -153,9 +154,10 @@ exports.login = async (req, res) => {
 
 // Update user profile
 exports.updateMe = async (req, res) => {
-  const { full_name, role, interests, profileImage } = req.body;
+  const { full_name, role, interests, profileImage, resume } = req.body;
   console.log("📝 Update profile request received");
   console.log("Profile image present:", !!profileImage);
+  console.log("Resume present:", !!resume);
   
   try {
     const updateData = {
@@ -182,11 +184,29 @@ exports.updateMe = async (req, res) => {
       }
     }
 
+    // If resume is provided, upload to Cloudinary
+    if (resume) {
+      console.log("📄 Uploading resume to Cloudinary...");
+      try {
+        const { uploadDocumentToCloudinary } = require("../utils/uploadToCloudinary");
+        const resumeUrl = await uploadDocumentToCloudinary(resume, "modx/resumes");
+        console.log("✅ Resume uploaded successfully:", resumeUrl);
+        updateData.resumeUrl = resumeUrl;
+      } catch (uploadError) {
+        console.error("❌ Resume upload error:", uploadError);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Failed to upload resume to Cloudinary",
+          error: uploadError.message 
+        });
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
       updateData,
       { new: true, runValidators: true }
-    ).select("_id fullName role interests profileImageUrl");
+    ).select("_id fullName role interests profileImageUrl resumeUrl");
 
     if (!user) {
       return res
