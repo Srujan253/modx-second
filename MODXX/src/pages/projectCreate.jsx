@@ -549,25 +549,28 @@ const ProjectCreation = () => {
     setIsRewriting(true);
     
     try {
-      const prompt = `Please rewrite and enhance the following project description to make it more professional, engaging, and clear while maintaining the core idea and purpose. The project title is "${currentValues.title || 'Untitled Project'}".
+      const prompt = `Rewrite and enhance the following project description to make it more professional, engaging, and clear while maintaining the core idea and purpose. The project title is "${currentValues.title || 'Untitled Project'}".
 
 Original description:
 "${currentDescription}"
 
-Please provide an improved version that:
-- Is more professional and well-structured
+IMPORTANT: Return ONLY the rewritten description text. Do NOT include any introductory phrases like "Here is", "Here's", "Rewritten description:", or any explanations. Just return the improved description directly.
+
+Requirements:
+- More professional and well-structured
 - Highlights key benefits and value propositions
 - Uses engaging language that attracts collaborators
 - Maintains the original intent and scope
-- Is concise but comprehensive (aim for 2-4 sentences)
-
-Rewritten description:`;
+- Concise but comprehensive (2-4 sentences)`;
 
       // Call Gemini AI only
       const result = await callAIWithFallback(prompt);
       
-      // Clean up the response - remove any prefix
-      const cleanedText = result.text.replace(/^(Rewritten description:|Here's the improved version:|Here's an enhanced version:)/i, '').trim();
+      // Clean up the response - remove any common prefixes or explanatory text
+      const cleanedText = result.text
+        .replace(/^(Rewritten description:|Here's the improved version:|Here's an enhanced version:|Here is the|Here's the|Here is your|Here's your|Sure,|Certainly,)/i, '')
+        .replace(/^[:\s]+/, '') // Remove leading colons and whitespace
+        .trim();
       
       // Set value and focus to end of text after AI update
       setValue("description", cleanedText, { 
@@ -701,25 +704,28 @@ Rewritten description:`;
     setIsRewriting(true);
     
     try {
-      const prompt = `Please rewrite and enhance the following project goals and objectives to make them more clear, specific, and actionable while maintaining the core intent. The project title is "${currentValues.title || 'Untitled Project'}".
+      const prompt = `Rewrite and enhance the following project goals and objectives to make them more clear, specific, and actionable while maintaining the core intent. The project title is "${currentValues.title || 'Untitled Project'}".
 
 Original goals:
 "${currentGoals}"
 
-Please provide an improved version that:
-- Uses clear and specific language
-- Makes goals measurable and actionable
-- Highlights the main objectives and outcomes
-- Uses professional project management terminology
-- Is well-structured and easy to understand (aim for 2-4 key points)
+IMPORTANT: Return ONLY the rewritten goals text. Do NOT include any introductory phrases like "Here is", "Here's", "Rewritten goals:", or any explanations. Just return the improved goals directly.
 
-Rewritten goals:`;
+Requirements:
+- Clear and specific language
+- Measurable and actionable goals
+- Highlights main objectives and outcomes
+- Professional project management terminology
+- Well-structured and easy to understand (2-4 key points)`;
 
       // Call Gemini AI only
       const result = await callAIWithFallback(prompt);
       
-      // Clean up the response - remove any prefix
-      const cleanedText = result.text.replace(/^(Rewritten goals:|Here's the improved version:|Here's an enhanced version:)/i, '').trim();
+      // Clean up the response - remove any common prefixes or explanatory text
+      const cleanedText = result.text
+        .replace(/^(Rewritten goals:|Here's the improved version:|Here's an enhanced version:|Here is the|Here's the|Here is your|Here's your|Sure,|Certainly,)/i, '')
+        .replace(/^[:\s]+/, '') // Remove leading colons and whitespace
+        .trim();
       
       // Set value and focus to end of text after AI update
       setValue("goals", cleanedText, { 

@@ -3,11 +3,19 @@ require("dotenv").config();
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+      socketTimeoutMS: 45000, // Socket timeout
+    });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error connecting to MongoDB: ${error.message}`);
+    console.error('\n⚠️  TROUBLESHOOTING TIPS:');
+    console.error('1. Check if your IP address is whitelisted in MongoDB Atlas');
+    console.error('2. Go to: https://cloud.mongodb.com/ → Network Access → Add IP Address');
+    console.error('3. Verify your MONGODB_URI in the .env file is correct');
+    console.error('4. Ensure your MongoDB Atlas cluster is running\n');
     process.exit(1);
   }
 };
