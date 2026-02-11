@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -37,14 +37,27 @@ const ProjectMessages = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        console.log("🔍 Fetching messages for project:", projectId);
+        console.log("📡 API URL:", `${API_URL}/messages/${projectId}/messages`);
+        
         const { data } = await axios.get(
           `${API_URL}/messages/${projectId}/messages`,
           {
             withCredentials: true,
           }
         );
-        setMessages(data.messages);
+        
+        console.log("✅ Messages response:", data);
+        console.log("📊 Number of messages:", data.messages?.length || 0);
+        
+        setMessages(data.messages || []);
       } catch (err) {
+        console.error("❌ Error fetching messages:", err);
+        console.error("📋 Error details:", {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
+        });
         toast.error("Failed to load messages.");
       } finally {
         setLoading(false);
@@ -69,6 +82,12 @@ const ProjectMessages = () => {
     fetchProjectInfo();
   }, [projectId]);
 
+  // Memoized message handler to prevent unnecessary re-renders
+  const handleNewMessage = useCallback((message) => {
+    console.log("📨 New message received:", message);
+    setMessages((prev) => [...prev, message]);
+  }, []);
+
   // Socket.IO real-time messaging
   useEffect(() => {
     if (!socket) {
@@ -79,17 +98,15 @@ const ProjectMessages = () => {
     console.log(`🔌 Joining project room: ${projectId}`);
     socket.emit("join-project", projectId);
 
-    socket.on("new-message", (message) => {
-      console.log("📨 New message received:", message);
-      setMessages((prev) => [...prev, message]);
-    });
+    // Use the memoized handler
+    socket.on("new-message", handleNewMessage);
 
     return () => {
       console.log(`🚪 Leaving project room: ${projectId}`);
       socket.emit("leave-project", projectId);
-      socket.off("new-message");
+      socket.off("new-message", handleNewMessage);
     };
-  }, [socket, projectId]);
+  }, [socket, projectId, handleNewMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

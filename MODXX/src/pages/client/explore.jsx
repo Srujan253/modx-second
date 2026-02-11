@@ -10,8 +10,9 @@ import {
   ArrowRight,
   Briefcase,
   Sparkles,
-} from "lucide-react"; // Added Sparkles
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import ProjectCard from "../../components/ProjectCard";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
@@ -148,7 +149,7 @@ const ExploreProjects = () => {
                 placeholder="Use AI Search: 'beginner projects about healthcare'..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-800/90 rounded-xl border border-gray-700/50"
+                className="w-full pl-12 pr-4 py-3 bg-gray-800 text-white placeholder-gray-400 rounded-xl border border-gray-700/50 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all duration-300"
               />
             </div>
             <button type="submit" className="btn btn-primary w-full md:w-auto">
@@ -175,15 +176,26 @@ const ExploreProjects = () => {
           </div>
         ) : (
           <>
-            <div className="mb-8 p-4 bg-gray-800/50 border border-gray-700/50 rounded-lg flex items-center gap-3">
-              <Sparkles
-                className={isSearching ? "text-blue-400" : "text-orange-400"}
-              />
-              <h2 className="text-xl font-semibold text-white">
-                {isSearching
-                  ? `Search Results for "${searchTerm}"`
-                  : "Recommended For You"}
-              </h2>
+            <div className="mb-8 p-4 bg-gray-800/50 border border-gray-700/50 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Sparkles
+                  className={isSearching ? "text-blue-400" : "text-orange-400"}
+                />
+                <h2 className="text-xl font-semibold text-white">
+                  {isSearching
+                    ? `Search Results for "${searchTerm}"`
+                    : "Recommended For You"}
+                </h2>
+              </div>
+              {!isSearching && projectsToDisplay.length > 3 && (
+                <button
+                  onClick={() => navigate('/explore/all')}
+                  className="flex items-center gap-2 text-orange-500 hover:text-orange-400 font-semibold transition-colors duration-300 hover:gap-3"
+                >
+                  View All
+                  <ArrowRight size={18} />
+                </button>
+              )}
             </div>
             {projectsToDisplay.length === 0 ? (
               <div className="bg-gray-800 p-8 rounded-lg text-center mt-12">
@@ -195,96 +207,33 @@ const ExploreProjects = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {projectsToDisplay.map((project) => {
-                  const isMember = userMemberships.accepted.includes(
-                    project.id
-                  );
-                  const isPending =
-                    userMemberships.pending.includes(project.id) ||
-                    appliedProjects.includes(project.id);
-                  return (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800/90 to-gray-900/90 border border-gray-700/50 hover:border-orange-500/30 shadow-lg hover:shadow-2xl transition-all flex flex-col"
-                    >
-                      <div className="relative w-full h-48 overflow-hidden">
-                        {project.project_image ? (
-                          <img
-                            src={getImageUrl(project.project_image)}
-                            alt={project.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-                            <Star size={48} className="text-gray-500" />
-                          </div>
-                        )}
-                        <div className="absolute top-4 left-4">
-                          {isMember && (
-                            <span className="badge badge-success">Joined</span>
-                          )}
-                          {isPending && !isMember && (
-                            <span className="badge badge-warning">Pending</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="p-6 flex flex-col flex-grow">
-                        <h3 className="text-xl font-bold mb-2 text-white group-hover:text-orange-400 transition-colors duration-200 truncate">
-                          {project.title}
-                        </h3>
-                        <p className="text-gray-300 mb-4 flex-grow line-clamp-2">
-                          {project.description}
-                        </p>
-                        <div className="flex items-center gap-4 text-gray-400 text-sm mb-4">
-                          <span className="flex items-center gap-1">
-                            <Star size={16} className="text-yellow-400" />{" "}
-                            {project.avg_rating || "N/A"}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Users size={16} /> {project.member_count || 0} /{" "}
-                            {project.max_members}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tech_stack?.map((tag, index) => (
-                            <span key={index} className="badge badge-outline">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex items-center justify-between gap-4 mt-auto">
-                          <Link
-                            to={`/project/${project.id}`}
-                            className="inline-flex items-center gap-2 text-orange-500 hover:text-orange-400 font-semibold"
-                          >
-                            View Details <ArrowRight size={16} />
-                          </Link>
-                          {isMember ? (
-                            <span className="font-semibold text-green-500">
-                              Joined
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handleApply(project.id)}
-                              className={`btn btn-sm ${
-                                isPending ? "btn-disabled" : "btn-info"
-                              }`}
-                              disabled={isPending}
-                            >
-                              <Briefcase size={16} />
-                              {isPending ? "Pending" : "Apply"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+              <>
+                {/* Project Grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {projectsToDisplay
+                    .slice(0, isSearching ? projectsToDisplay.length : 3)
+                    .map((project, index) => {
+                      const isMember = userMemberships.accepted.includes(
+                        project.id
+                      );
+                      const isPending =
+                        userMemberships.pending.includes(project.id) ||
+                        appliedProjects.includes(project.id);
+                      
+                      return (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          isMember={isMember}
+                          isPending={isPending}
+                          onApply={handleApply}
+                          showRecommendedBadge={!isSearching && index < 3}
+                          index={index}
+                        />
+                      );
+                    })}
+                </div>
+              </>
             )}
           </>
         )}

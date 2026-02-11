@@ -17,6 +17,7 @@ import Home from "./components/home";
 import Features from "./components/features";
 import About from "./components/about";
 import ExploreProjects from "./pages/client/explore";
+import ExploreAll from "./pages/client/ExploreAll";
 import { AuthProvider } from "./context/AuthContext";
 import { SocketProvider } from "./context/SocketContext";
 import Footer from "./components/Footer";
@@ -42,6 +43,7 @@ function AppContent() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/explore" element={<ExploreProjects />} />
+              <Route path="/explore/all" element={<ExploreAll />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/features" element={<Features />} />
