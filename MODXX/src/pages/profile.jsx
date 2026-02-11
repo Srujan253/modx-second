@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { toast } from "react-toastify";
 import TagInput from "../components/TagInput";
 import {
   User,
@@ -38,6 +39,8 @@ const Profile = () => {
     username: "",
     role: "",
     interests: [],
+    skills: [],
+    bio: "",
   });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
@@ -53,6 +56,8 @@ const Profile = () => {
         username: user.full_name || "",
         role: user.role || "",
         interests: user.interests || [],
+        skills: user.skills || [],
+        bio: user.bio || "",
       });
     }
   }, [user]);
@@ -70,6 +75,8 @@ const Profile = () => {
         full_name: editForm.username,
         role: editForm.role,
         interests: editForm.interests,
+        skills: editForm.skills,
+        bio: editForm.bio,
       };
 
       // Add profile image if selected
@@ -95,7 +102,7 @@ const Profile = () => {
     if (file) {
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should be less than 5MB");
+        toast.error("Image size should be less than 5MB");
         return;
       }
 
@@ -113,7 +120,9 @@ const Profile = () => {
               profileImage: base64Image,
               full_name: user.full_name,
               role: user.role,
-              interests: user.interests || []
+              interests: user.interests || [],
+              skills: user.skills || [],
+              bio: user.bio || ""
             },
             { withCredentials: true }
           );
@@ -123,7 +132,7 @@ const Profile = () => {
           window.location.reload();
         } catch (err) {
           console.error("Upload error:", err);
-          alert("Failed to upload image. Please try again.");
+          toast.error("Failed to upload image. Please try again.");
         }
       };
       reader.readAsDataURL(file);
@@ -136,13 +145,13 @@ const Profile = () => {
       // Check file type
       const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       if (!allowedTypes.includes(file.type)) {
-        alert("Please upload a PDF or DOC file");
+        toast.error("Please upload a PDF or DOC file");
         return;
       }
 
       // Check file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert("Resume size should be less than 5MB");
+        toast.error("Resume size should be less than 5MB");
         return;
       }
 
@@ -163,7 +172,9 @@ const Profile = () => {
               resume: base64Resume, // Send the full data URL - Cloudinary will handle it
               full_name: user.full_name,
               role: user.role,
-              interests: user.interests || []
+              interests: user.interests || [],
+              skills: user.skills || [],
+              bio: user.bio || ""
             },
             { withCredentials: true }
           );
@@ -173,7 +184,7 @@ const Profile = () => {
           window.location.reload();
         } catch (err) {
           console.error("Resume upload error:", err);
-          alert("Failed to upload resume. Please try again.");
+          toast.error("Failed to upload resume. Please try again.");
         }
       };
       reader.readAsDataURL(file);
@@ -430,6 +441,29 @@ const Profile = () => {
                       value={profile.is_verified ? "Verified" : "Not Verified"}
                       highlight={profile.is_verified}
                     />
+                    {profile.bio && (
+                      <div className="col-span-2">
+                         <ProfileInfo
+                          icon={FileText}
+                          label="Bio"
+                          value={profile.bio}
+                        />
+                      </div>
+                    )}
+                    {profile.skills && profile.skills.length > 0 && (
+                      <div className="col-span-2">
+                         <div className="p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50">
+                          <p className="text-sm font-medium text-gray-400 mb-2">Skills</p>
+                          <div className="flex flex-wrap gap-2">
+                            {profile.skills.map((skill, idx) => (
+                              <span key={idx} className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-sm border border-blue-500/30">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <ProfileInfo
                       icon={Calendar}
                       label="Created At"
@@ -599,6 +633,47 @@ const Profile = () => {
                 highlight
               />
               
+              {/* Bio Display */}
+              <div className="col-span-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50"
+                >
+                  <p className="text-sm font-medium text-gray-400 mb-2">Bio / About</p>
+                  {user.bio ? (
+                    <p className="text-gray-300 leading-relaxed">{user.bio}</p>
+                  ) : (
+                    <p className="text-gray-500 text-sm italic">Add a bio to help the AI find better projects for you.</p>
+                  )}
+                </motion.div>
+              </div>
+
+              {/* Skills Display */}
+              <div className="col-span-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-4 rounded-xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50"
+                >
+                  <p className="text-sm font-medium text-gray-400 mb-3">Skills</p>
+                  {user.skills && user.skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {user.skills.map((skill, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-sm font-medium border border-blue-500/30 shadow-sm"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm italic">Add your professional skills.</p>
+                  )}
+                </motion.div>
+              </div>
+              
               {/* Interests Display */}
               <div className="col-span-2">
                 <motion.div
@@ -717,21 +792,7 @@ const Profile = () => {
               />
             </div>
 
-            {/* Action Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <ActionButton
-                icon={Edit3}
-                label="Edit Profile"
-                variant="primary"
-                className="flex-1 sm:flex-none"
-                onClick={() => setEditModalOpen(true)}
-              />
-            </motion.div>
+
           </div>
         </div>
 
@@ -843,6 +904,24 @@ const Profile = () => {
                     setTags={(interests) => setEditForm({ ...editForm, interests })}
                     maxTags={3}
                     placeholder="Add your interests..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 mb-2">Professional Skills</label>
+                  <TagInput
+                    tags={editForm.skills}
+                    setTags={(skills) => setEditForm({ ...editForm, skills })}
+                    placeholder="e.g. React, Python, UI Design..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 mb-1">Bio / About</label>
+                  <textarea
+                    name="bio"
+                    value={editForm.bio}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:border-orange-500 outline-none h-24 resize-none"
+                    placeholder="Tell us about yourself..."
                   />
                 </div>
                 {editError && (

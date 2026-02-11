@@ -119,6 +119,8 @@ exports.getMe = async (req, res) => {
       resume_url: user.resumeUrl,
       role: user.role,
       interests: user.interests || [],
+      skills: user.skills || [],
+      bio: user.bio || "",
       is_verified: user.isVerified,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
@@ -154,7 +156,7 @@ exports.login = async (req, res) => {
 
 // Update user profile
 exports.updateMe = async (req, res) => {
-  const { full_name, role, interests, profileImage, resume } = req.body;
+  const { full_name, role, interests, skills, bio, profileImage, resume } = req.body;
   console.log("📝 Update profile request received");
   console.log("Profile image present:", !!profileImage);
   console.log("Resume present:", !!resume);
@@ -164,6 +166,8 @@ exports.updateMe = async (req, res) => {
       fullName: full_name,
       role,
       interests: interests || [],
+      skills: skills || [],
+      bio: bio || "",
     };
 
     // If profile image is provided, upload to Cloudinary
@@ -206,7 +210,7 @@ exports.updateMe = async (req, res) => {
       req.user.id,
       updateData,
       { new: true, runValidators: true }
-    ).select("_id fullName role interests profileImageUrl resumeUrl");
+    ).select("_id fullName role interests skills bio profileImageUrl resumeUrl");
 
     if (!user) {
       return res

@@ -7,6 +7,7 @@ import { Star, User, Users } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import MyTaskPanel from "../components/MyTaskPanel";
 import RelatedProjects from "../components/RelatedProjects";
+import Modal from "../components/Modal";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
@@ -17,6 +18,7 @@ const ProjectDetails = () => {
   const [loading, setLoading] = useState(true);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -300,26 +302,7 @@ const ProjectDetails = () => {
                 </button>
                 <button
                   className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
-                  onClick={async () => {
-                    if (
-                      window.confirm(
-                        "Are you sure you want to delete this project? This action cannot be undone."
-                      )
-                    ) {
-                      try {
-                        await axios.delete(`${API_URL}/project/${projectId}`, {
-                          withCredentials: true,
-                        });
-                        toast.success("Project deleted successfully.");
-                        window.location.href = "/dashboard";
-                      } catch (error) {
-                        toast.error(
-                          error.response?.data?.message ||
-                            "Failed to delete project."
-                        );
-                      }
-                    }
-                  }}
+                  onClick={() => setIsDeleteModalOpen(true)}
                 >
                   Delete Project
                 </button>
@@ -328,6 +311,27 @@ const ProjectDetails = () => {
           </div>
         )}
         <RelatedProjects currentProjectId={projectId} />
+
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={async () => {
+            try {
+              await axios.delete(`${API_URL}/project/${projectId}`, {
+                withCredentials: true,
+              });
+              toast.success("Project deleted successfully.");
+              window.location.href = "/dashboard";
+            } catch (error) {
+              toast.error(
+                error.response?.data?.message || "Failed to delete project."
+              );
+            }
+          }}
+          title="Delete Project"
+          message="Are you sure you want to delete this project? This action cannot be undone and all project data will be lost forever."
+          confirmText="Delete Project"
+        />
       </div>
 
       {/* Right-side: If not leader, show MyTaskPanel for assigned tasks */}

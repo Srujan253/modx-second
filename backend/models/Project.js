@@ -12,6 +12,9 @@ const projectSchema = new mongoose.Schema(
     goals: {
       type: String,
     },
+    motivation: {
+      type: String,
+    },
     timeline: {
       type: Number,
     },

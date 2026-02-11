@@ -71,6 +71,7 @@ exports.editProject = async (req, res) => {
       timeline,
       description,
       goals,
+      motivation,
       requiredSkills,
       techStack,
       maxMembers,
@@ -86,8 +87,20 @@ exports.editProject = async (req, res) => {
     if (timeline) updateFields.timeline = timeline;
     if (description) updateFields.description = description;
     if (goals) updateFields.goals = goals;
-    if (requiredSkills) updateFields.requiredSkills = requiredSkills.split(",").map((s) => s.trim());
-    if (techStack) updateFields.techStack = techStack.split(",").map((s) => s.trim());
+    if (motivation !== undefined) updateFields.motivation = motivation;
+    
+    if (requiredSkills !== undefined) {
+      updateFields.requiredSkills = typeof requiredSkills === 'string' 
+        ? requiredSkills.split(",").map((s) => s.trim()).filter(s => s !== "") 
+        : (Array.isArray(requiredSkills) ? requiredSkills : []);
+    }
+    
+    if (techStack !== undefined) {
+      updateFields.techStack = typeof techStack === 'string' 
+        ? techStack.split(",").map((s) => s.trim()).filter(s => s !== "") 
+        : (Array.isArray(techStack) ? techStack : []);
+    }
+    
     if (maxMembers) updateFields.maxMembers = maxMembers;
     if (projectImage) updateFields.projectImage = projectImage;
 
@@ -343,10 +356,11 @@ exports.getProjectDetailsPublic = async (req, res) => {
         .json({ success: false, message: "Project not found." });
     }
 
-    const formattedProject = {
+    const formattedProject = addIdField({
       ...project,
       leader_name: project.leaderId?.fullName || "Unknown",
-    };
+      leader_id: project.leaderId?._id.toString(),
+    });
 
     res.status(200).json({ success: true, project: formattedProject });
   } catch (error) {
@@ -360,7 +374,8 @@ const addIdField = (doc) => {
   if (!doc) return doc;
   return {
     ...doc,
-    id: doc._id.toString(),
+    id: doc._id?.toString() || doc.id,
+    leader_id: doc.leaderId?._id?.toString() || doc.leaderId?.toString() || doc.leader_id,
     project_image: doc.projectImage,
     required_skills: doc.requiredSkills,
     tech_stack: doc.techStack,
@@ -568,6 +583,7 @@ exports.createProject = async (req, res) => {
     techStack,
     maxMembers,
     projectImage,
+    motivation,
   } = req.body;
   const userId = req.user.id;
 
@@ -615,6 +631,7 @@ exports.createProject = async (req, res) => {
       title,
       description,
       goals,
+      motivation,
       timeline: timelineInt,
       requiredSkills: skillsArray,
       techStack: techArray,
@@ -755,11 +772,12 @@ exports.getProjectDetails = async (req, res) => {
       status: "accepted",
     });
 
-    const formattedProject = {
+    const formattedProject = addIdField({
       ...project,
       leader_name: project.leaderId?.fullName || "Unknown",
+      leader_id: project.leaderId?._id.toString(),
       memberCount: memberCount + 1, // +1 for the leader
-    };
+    });
 
     res.status(200).json({ success: true, project: formattedProject });
   } catch (error) {

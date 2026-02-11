@@ -23,20 +23,32 @@ import {
   Activity,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import Modal from "../components/Modal";
 
 const ProjectTask = () => {
   // Remove member handler (for leader)
-  const handleRemoveMember = async (memberId) => {
-    if (!window.confirm("Are you sure you want to remove this member?")) return;
+  const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
+
+  // Remove member handler (for leader)
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return;
     try {
-      await axiosInstance.delete(`/project/${projectId}/members/${memberId}`);
+      await axiosInstance.delete(`/project/${projectId}/members/${memberToRemove}`);
       toast.success("Member removed");
       // Refresh members
       const res = await axiosInstance.get(`/project/${projectId}/members`);
       setMembers(res.data.members || []);
     } catch (err) {
       toast.error("Failed to remove member");
+    } finally {
+      setMemberToRemove(null);
     }
+  };
+
+  const triggerRemoveMember = (memberId) => {
+    setMemberToRemove(memberId);
+    setIsRemoveModalOpen(true);
   };
   // ...existing code...
 
@@ -375,7 +387,7 @@ const ProjectTask = () => {
                             {isLeaderOrMentor && myRole === "leader" && member.role !== "leader" && (
                               <button
                                 className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold"
-                                onClick={() => handleRemoveMember(member.id)}
+                                onClick={() => triggerRemoveMember(member.id)}
                               >
                                 Remove
                               </button>
@@ -430,6 +442,18 @@ const ProjectTask = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <Modal
+        isOpen={isRemoveModalOpen}
+        onClose={() => {
+          setIsRemoveModalOpen(false);
+          setMemberToRemove(null);
+        }}
+        onConfirm={handleRemoveMember}
+        title="Remove Team Member"
+        message="Are you sure you want to remove this member from the project team? They will lose access to all project tasks and messages."
+        confirmText="Remove Member"
+      />
     </div>
   );
 };

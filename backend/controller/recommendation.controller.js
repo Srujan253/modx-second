@@ -59,7 +59,7 @@ exports.recommendForUser = async (req, res, next) => {
     let allProjects = [];
 
     try {
-      const profileText = `User with interests in ${user.interest} and skills in ${user.otherInterest}.`;
+      const profileText = `User with interests in ${user.interests?.join(", ") || "none"} and skills in ${user.skills?.join(", ") || "none"}. Bio: ${user.bio || "none"}`;
 
       // Step 1: Try to get recommendations from AI service
       const response = await getUserRecommendations(profileText);

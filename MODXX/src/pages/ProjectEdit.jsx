@@ -1,13 +1,224 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { ArrowRight } from "lucide-react";
+import { 
+  ArrowRight, 
+  Clock,
+  Sparkles,
+  FileText,
+  Target,
+  Code,
+  Calendar,
+  Users,
+  Image,
+  AlertCircle,
+  Wand2,
+  RefreshCw,
+  X
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+
+// Move InputField outside to prevent re-creation on every render
+const InputField = ({ 
+  label, 
+  name, 
+  type = "text", 
+  icon: Icon, 
+  placeholder, 
+  required = false,
+  register,
+  errors,
+  ...props 
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="space-y-2"
+  >
+    <label htmlFor={name} className="flex items-center gap-2 text-sm font-medium text-gray-300">
+      {Icon && <Icon className="w-4 h-4 text-orange-400" />}
+      {label}
+      {required && <span className="text-red-400">*</span>}
+    </label>
+    <div className="relative">
+      <input
+        type={type}
+        id={name}
+        placeholder={placeholder}
+        {...register(name, props.validation)}
+        className={`w-full px-4 py-3 bg-gray-700/50 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:border-transparent ${
+          errors[name] 
+            ? 'border-red-500 focus:ring-red-500/50' 
+            : 'border-gray-600 focus:ring-orange-500/50'
+        }`}
+        {...props}
+      />
+      {errors[name] && (
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+          <AlertCircle className="h-5 w-5 text-red-400" />
+        </div>
+      )}
+    </div>
+    {errors[name] && (
+      <div className="flex items-center gap-1 text-red-400 text-sm">
+        <AlertCircle className="w-4 h-4" />
+        <span>{errors[name].message}</span>
+      </div>
+    )}
+  </motion.div>
+);
+
+// Move TextAreaField outside to prevent re-creation on every render
+const TextAreaField = React.memo(({ 
+  label, 
+  name, 
+  icon: Icon, 
+  placeholder, 
+  required = false, 
+  rows = 4,
+  showAIRewrite = false,
+  register,
+  errors,
+  watchedDescription,
+  watchedGoals,
+  isRewriting,
+  aiDisabled,
+  rewriteWithAI,
+  rewriteGoalsWithAI,
+  descriptionRef,
+  goalsRef,
+  lastCursorPosition,
+  lastGoalsCursorPosition,
+  ...props 
+}) => {
+  // Use appropriate ref and cursor position based on field name
+  const textareaRef = name === 'description' ? descriptionRef : name === 'goals' ? goalsRef : useRef(null);
+  const watchedValue = name === 'description' ? watchedDescription : name === 'goals' ? watchedGoals : '';
+  const rewriteFunction = name === 'description' ? rewriteWithAI : name === 'goals' ? rewriteGoalsWithAI : null;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-2"
+    >
+      <div className="flex items-center justify-between">
+        <label htmlFor={name} className="flex items-center gap-2 text-sm font-medium text-gray-300">
+          {Icon && <Icon className="w-4 h-4 text-orange-400" />}
+          {label}
+          {required && <span className="text-red-400">*</span>}
+        </label>
+        {showAIRewrite && rewriteFunction && (
+          <motion.button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!aiDisabled) {
+                rewriteFunction();
+              }
+            }}
+            disabled={isRewriting || aiDisabled || !watchedValue || watchedValue.length < 10}
+            whileHover={!isRewriting && !aiDisabled ? { scale: 1.05 } : {}}
+            whileTap={!isRewriting && !aiDisabled ? { scale: 0.95 } : {}}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+              isRewriting || aiDisabled || !watchedValue || watchedValue.length < 10
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-purple-500/25'
+            }`}
+            title={aiDisabled ? "AI temporarily disabled due to rate limits" : "Rewrite with AI"}
+          >
+            {isRewriting ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <RefreshCw className="w-3 h-3" />
+                </motion.div>
+                Rewriting...
+              </>
+            ) : aiDisabled ? (
+              <>
+                <X className="w-3 h-3" />
+                AI Disabled
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-3 h-3" />
+                Rewrite with AI
+              </>
+            )}
+          </motion.button>
+        )}
+      </div>
+      <div className="relative">
+        <textarea
+          ref={textareaRef}
+          id={name}
+          rows={rows}
+          placeholder={placeholder}
+          {...register(name, {
+            ...props.validation,
+            onChange: (e) => {
+              // Store cursor position for specific fields
+              if (name === 'description' && textareaRef.current) {
+                lastCursorPosition.current = textareaRef.current.selectionStart;
+              } else if (name === 'goals' && textareaRef.current) {
+                lastGoalsCursorPosition.current = textareaRef.current.selectionStart;
+              }
+              // Call the original onChange from react-hook-form
+              return props.validation?.onChange?.(e);
+            }
+          })}
+          className={`w-full px-4 py-3 bg-gray-700/50 border rounded-lg text-white placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:border-transparent resize-none ${
+            errors[name] 
+              ? 'border-red-500 focus:ring-red-500/50' 
+              : 'border-gray-600 focus:ring-orange-500/50'
+          }`}
+          // Additional event handlers for better cursor management
+          onSelect={(e) => {
+            if (name === 'description') {
+              lastCursorPosition.current = e.target.selectionStart;
+            } else if (name === 'goals') {
+              lastGoalsCursorPosition.current = e.target.selectionStart;
+            }
+          }}
+          onKeyUp={(e) => {
+            if (name === 'description') {
+              lastCursorPosition.current = e.target.selectionStart;
+            } else if (name === 'goals') {
+              lastGoalsCursorPosition.current = e.target.selectionStart;
+            }
+          }}
+          onMouseUp={(e) => {
+            if (name === 'description') {
+              lastCursorPosition.current = e.target.selectionStart;
+            } else if (name === 'goals') {
+              lastGoalsCursorPosition.current = e.target.selectionStart;
+            }
+          }}
+        />
+        {errors[name] && (
+          <div className="absolute top-3 right-3">
+            <AlertCircle className="h-5 w-5 text-red-400" />
+          </div>
+        )}
+      </div>
+      {errors[name] && (
+        <div className="flex items-center gap-1 text-red-400 text-sm">
+          <AlertCircle className="w-4 h-4" />
+          <span>{errors[name].message}</span>
+        </div>
+      )}
+    </motion.div>
+  );
+});
 
 const ProjectEdit = () => {
   const { projectId } = useParams();
@@ -16,11 +227,148 @@ const ProjectEdit = () => {
     register,
     handleSubmit,
     setValue,
+    watch,
+    getValues,
     formState: { errors },
   } = useForm();
   const navigate = useNavigate();
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRewriting, setIsRewriting] = useState(false);
+  const [lastAICall, setLastAICall] = useState(0); 
+  const [aiDisabled, setAiDisabled] = useState(false); 
+
+  const descriptionRef = useRef(null);
+  const goalsRef = useRef(null);
+  const lastCursorPosition = useRef(null);
+  const lastGoalsCursorPosition = useRef(null);
+
+  const watchedDescription = watch("description", "");
+  const watchedGoals = watch("goals", "");
+
+  useEffect(() => {
+    if (descriptionRef.current && lastCursorPosition.current !== null) {
+      const position = lastCursorPosition.current;
+      const currentValue = descriptionRef.current.value;
+      setTimeout(() => {
+        if (descriptionRef.current && position <= currentValue.length) {
+          descriptionRef.current.setSelectionRange(position, position);
+          lastCursorPosition.current = null;
+        }
+      }, 0);
+    }
+  });
+
+  useEffect(() => {
+    if (goalsRef.current && lastGoalsCursorPosition.current !== null) {
+      const position = lastGoalsCursorPosition.current;
+      const currentValue = goalsRef.current.value;
+      setTimeout(() => {
+        if (goalsRef.current && position <= currentValue.length) {
+          goalsRef.current.setSelectionRange(position, position);
+          lastGoalsCursorPosition.current = null;
+        }
+      }, 0);
+    }
+  });
+
+  const checkRateLimit = () => {
+    const now = Date.now();
+    const timeSinceLastCall = now - lastAICall;
+    const minInterval = 5000;
+    if (timeSinceLastCall < minInterval) {
+      const waitTime = Math.ceil((minInterval - timeSinceLastCall) / 1000);
+      throw new Error(`⏳ Please wait ${waitTime} more second${waitTime > 1 ? 's' : ''} before trying AI rewrite again.`);
+    }
+    setLastAICall(now);
+  };
+
+  const disableAITemporarily = useCallback(() => {
+    setAiDisabled(true);
+    setTimeout(() => {
+      setAiDisabled(false);
+      toast.info("🔄 AI features are back online!");
+    }, 10 * 60 * 1000);
+  }, []);
+
+  const callGeminiAPI = useCallback(async (prompt) => {
+    const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!GEMINI_API_KEY) throw new Error("Gemini API key not found");
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    return await axios.post(apiUrl, {
+      contents: [{ parts: [{ text: prompt }] }]
+    }, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 30000
+    });
+  }, []);
+
+  const callAIWithFallback = useCallback(async (prompt) => {
+    try {
+      const response = await callGeminiAPI(prompt);
+      if (response.data.candidates?.[0]?.content) {
+        return { text: response.data.candidates[0].content.parts[0].text.trim(), provider: 'Gemini' };
+      }
+      throw new Error("No response from Gemini");
+    } catch (error) {
+      throw error;
+    }
+  }, [callGeminiAPI]);
+
+  const rewriteWithAI = useCallback(async () => {
+    const currentValues = getValues();
+    const currentDescription = currentValues.description;
+    if (!currentDescription || currentDescription.trim().length < 10) {
+      toast.error("Please enter at least 10 characters before rewriting.");
+      return;
+    }
+    try { checkRateLimit(); } catch (e) { toast.warning(e.message); return; }
+    setIsRewriting(true);
+    try {
+      const prompt = `Rewrite and enhance the following project description for "${currentValues.title || 'Untitled'}". Return ONLY rewritten text.\nOriginal: "${currentDescription}"`;
+      const result = await callAIWithFallback(prompt);
+      const cleanedText = result.text.replace(/^(Rewritten description:|Here's the version:)/i, '').replace(/^[:\s]+/, '').trim();
+      setValue("description", cleanedText, { shouldValidate: true, shouldDirty: true });
+      setTimeout(() => {
+        if (descriptionRef.current) {
+          descriptionRef.current.focus();
+          descriptionRef.current.setSelectionRange(cleanedText.length, cleanedText.length);
+        }
+      }, 100);
+      toast.success(`✨ Description enhanced!`);
+    } catch (error) {
+      if (error.response?.status === 429) disableAITemporarily();
+      toast.error("AI enhancement failed. Please try again later.");
+    } finally { setIsRewriting(false); }
+  }, [getValues, setValue, callAIWithFallback, checkRateLimit, disableAITemporarily]);
+
+  const rewriteGoalsWithAI = useCallback(async () => {
+    const currentValues = getValues();
+    const currentGoals = currentValues.goals;
+    if (!currentGoals || currentGoals.trim().length < 10) {
+      toast.error("Please enter at least 10 characters before rewriting.");
+      return;
+    }
+    try { checkRateLimit(); } catch (e) { toast.warning(e.message); return; }
+    setIsRewriting(true);
+    try {
+      const prompt = `Rewrite and enhance the following project goals for "${currentValues.title || 'Untitled'}". Return ONLY rewritten text.\nOriginal: "${currentGoals}"`;
+      const result = await callAIWithFallback(prompt);
+      const cleanedText = result.text.replace(/^(Rewritten goals:|Here's the version:)/i, '').replace(/^[:\s]+/, '').trim();
+      setValue("goals", cleanedText, { shouldValidate: true, shouldDirty: true });
+      setTimeout(() => {
+        if (goalsRef.current) {
+          goalsRef.current.focus();
+          goalsRef.current.setSelectionRange(cleanedText.length, cleanedText.length);
+        }
+      }, 100);
+      toast.success(`🎯 Goals enhanced!`);
+    } catch (error) {
+      if (error.response?.status === 429) disableAITemporarily();
+      toast.error("AI enhancement failed. Please try again later.");
+    } finally { setIsRewriting(false); }
+  }, [getValues, setValue, callAIWithFallback, checkRateLimit, disableAITemporarily]);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -38,11 +386,12 @@ const ProjectEdit = () => {
         setValue("timeline", project.timeline);
         setValue("description", project.description);
         setValue("goals", project.goals);
+        setValue("motivation", project.motivation || "");
         setValue("requiredSkills", project.required_skills?.join(", "));
         setValue("techStack", project.tech_stack?.join(", "));
         setValue("maxMembers", project.max_members);
         setPreview(
-          project.project_image ? `${API_URL}${project.project_image}` : null
+          project.project_image ? (project.project_image.startsWith('http') ? project.project_image : `${API_URL}${project.project_image}`) : null
         );
         setLoading(false);
       } catch (error) {
@@ -54,6 +403,7 @@ const ProjectEdit = () => {
   }, [projectId, user, setValue, navigate]);
 
   const onSubmit = async (data) => {
+    setIsSubmitting(true);
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -74,6 +424,8 @@ const ProjectEdit = () => {
       navigate(`/project/${projectId}`);
     } catch (error) {
       toast.error(error.response?.data?.message || "Project update failed.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -131,149 +483,117 @@ const ProjectEdit = () => {
           encType="multipart/form-data"
         >
           <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="title" className="block text-gray-300 mb-1">
-                Project Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                {...register("title", { required: "Title is required" })}
-                className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              {errors.title && (
-                <p className="text-red-400 text-sm mt-1">
-                  {errors.title.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="timeline" className="block text-gray-300 mb-1">
-                Timeline{" "}
-                <span className="text-gray-400 text-xs">
-                  (Enter number of days)
-                </span>
-              </label>
-              <input
-                type="number"
-                id="timeline"
-                min="1"
-                step="1"
-                placeholder="e.g., 30"
-                {...register("timeline", {
-                  required: "Timeline is required",
-                  valueAsNumber: true,
-                  min: { value: 1, message: "Timeline must be at least 1 day" },
-                  validate: (value) =>
-                    Number.isInteger(value) || "Enter a whole number of days",
-                })}
-                className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              {errors.timeline && (
-                <p className="text-red-400 text-sm mt-1">
-                  {errors.timeline.message}
-                </p>
-              )}
-            </div>
+            <InputField
+              label="Project Title"
+              name="title"
+              icon={Sparkles}
+              placeholder="Project Title"
+              required
+              register={register}
+              errors={errors}
+              validation={{ required: "Title is required" }}
+            />
+            <InputField
+              label="Timeline (Days)"
+              name="timeline"
+              type="number"
+              icon={Calendar}
+              placeholder="e.g., 30"
+              required
+              register={register}
+              errors={errors}
+              validation={{
+                required: "Timeline is required",
+                valueAsNumber: true,
+                min: { value: 1, message: "Must be at least 1 day" },
+              }}
+            />
           </div>
-          <div>
-            <label htmlFor="description" className="block text-gray-300 mb-1">
-              Project Description
-            </label>
-            <textarea
-              id="description"
-              rows="4"
-              {...register("description", {
-                required: "Description is required",
-              })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            ></textarea>
-            {errors.description && (
-              <p className="text-red-400 text-sm mt-1">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="goals" className="block text-gray-300 mb-1">
-              Goals
-            </label>
-            <textarea
-              id="goals"
-              rows="3"
-              {...register("goals", { required: "Goals are required" })}
-              className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            ></textarea>
-            {errors.goals && (
-              <p className="text-red-400 text-sm mt-1">
-                {errors.goals.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="motivation" className="block text-gray-300 mb-1">
-              Why should members join? (Motivation)
-            </label>
-            <textarea
-              id="motivation"
-              rows="3"
-              {...register("motivation")}
-              className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            ></textarea>
+
+          <TextAreaField
+            label="Project Description"
+            name="description"
+            icon={FileText}
+            placeholder="Describe your project..."
+            required
+            rows={4}
+            showAIRewrite={true}
+            register={register}
+            errors={errors}
+            watchedDescription={watchedDescription}
+            isRewriting={isRewriting}
+            aiDisabled={aiDisabled}
+            rewriteWithAI={rewriteWithAI}
+            descriptionRef={descriptionRef}
+            lastCursorPosition={lastCursorPosition}
+            validation={{ required: "Description is required" }}
+          />
+
+          <TextAreaField
+            label="Goals"
+            name="goals"
+            icon={Target}
+            placeholder="Project goals..."
+            required
+            rows={3}
+            showAIRewrite={true}
+            register={register}
+            errors={errors}
+            watchedGoals={watchedGoals}
+            isRewriting={isRewriting}
+            aiDisabled={aiDisabled}
+            rewriteGoalsWithAI={rewriteGoalsWithAI}
+            goalsRef={goalsRef}
+            lastGoalsCursorPosition={lastGoalsCursorPosition}
+            validation={{ required: "Goals are required" }}
+          />
+
+          <TextAreaField
+            label="Motivation"
+            name="motivation"
+            icon={Sparkles}
+            placeholder="Why should members join?"
+            required={false}
+            rows={3}
+            register={register}
+            errors={errors}
+          />
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <InputField
+              label="Required Skills"
+              name="requiredSkills"
+              icon={Code}
+              placeholder="React, Node.js..."
+              register={register}
+              errors={errors}
+            />
+            <InputField
+              label="Tech Stack"
+              name="techStack"
+              icon={Code}
+              placeholder="MERN, Firebase..."
+              register={register}
+              errors={errors}
+            />
           </div>
           <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label
-                htmlFor="requiredSkills"
-                className="block text-gray-300 mb-1"
-              >
-                Required Skills (Comma separated)
-              </label>
-              <input
-                type="text"
-                id="requiredSkills"
-                {...register("requiredSkills")}
-                className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="techStack" className="block text-gray-300 mb-1">
-                Tech Stack (Comma separated)
-              </label>
-              <input
-                type="text"
-                id="techStack"
-                {...register("techStack")}
-                className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="maxMembers" className="block text-gray-300 mb-1">
-                Max Members (Max 8)
-              </label>
-              <input
-                type="number"
-                id="maxMembers"
-                {...register("maxMembers", {
-                  valueAsNumber: true,
-                  min: 1,
-                  max: 8,
-                })}
-                className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              {errors.maxMembers && (
-                <p className="text-red-400 text-sm mt-1">
-                  {errors.maxMembers.message}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="projectImage"
-                className="block text-gray-300 mb-1"
-              >
+            <InputField
+              label="Max Members"
+              name="maxMembers"
+              type="number"
+              icon={Users}
+              placeholder="Max members"
+              register={register}
+              errors={errors}
+              validation={{
+                min: { value: 1, message: "Min 1" },
+                max: { value: 8, message: "Max 8" },
+              }}
+            />
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                <Image className="w-4 h-4 text-orange-400" />
                 Project Image
               </label>
               <input
@@ -293,12 +613,34 @@ const ProjectEdit = () => {
               )}
             </div>
           </div>
-          <button
+          <motion.button
             type="submit"
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition duration-200"
+            disabled={isSubmitting}
+            whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+            whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+            className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 shadow-lg flex items-center justify-center gap-3 ${
+              isSubmitting
+                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white hover:shadow-xl"
+            }`}
           >
-            Update Project <ArrowRight size={20} className="inline ml-2" />
-          </button>
+            {isSubmitting ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Clock className="w-5 h-5" />
+                </motion.div>
+                Updating Project...
+              </>
+            ) : (
+              <>
+                Update Project
+                <ArrowRight size={20} />
+              </>
+            )}
+          </motion.button>
         </form>
       </motion.div>
     </div>

@@ -463,6 +463,7 @@ const ProjectCreation = () => {
         requiredSkills: data.requiredSkills,
         techStack: data.techStack,
         maxMembers: data.maxMembers,
+        motivation: data.motivation,
         projectImage: projectImageBase64, // Send base64 string
       };
 
@@ -975,6 +976,25 @@ Requirements:
                     validation={{
                       required: "Goals are required",
                       minLength: { value: 10, message: "Goals must be at least 10 characters" }
+                    }}
+                  />
+
+                  <TextAreaField
+                    label="Motivation"
+                    name="motivation"
+                    icon={Sparkles}
+                    placeholder="Why should others join this project? What's the inspiring vision?"
+                    required={false}
+                    rows={3}
+                    register={register}
+                    errors={errors}
+                    watchedDescription={watchedDescription}
+                    isRewriting={isRewriting}
+                    aiDisabled={aiDisabled}
+                    descriptionRef={descriptionRef}
+                    lastCursorPosition={lastCursorPosition}
+                    validation={{
+                      maxLength: { value: 500, message: "Motivation must be under 500 characters" }
                     }}
                   />
                 </div>

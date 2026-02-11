@@ -22,6 +22,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import axiosInstance from "../api/axiosInstance";
+import { toast } from "react-toastify";
 
 // --- Reusable Animated Input Component ---
 const FormInput = ({
@@ -231,7 +232,7 @@ const SignupPage = () => {
         email: formData.email,
         otp: formData.otp,
       });
-      alert(response.data.message);
+      toast.success(response.data.message);
       navigate("/login");
     } catch (err) {
       setError(

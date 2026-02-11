@@ -67,10 +67,13 @@ def get_new_or_updated_documents():
         full_name = user.get('fullName', '')
         roles = user.get('roles', [])
         interest = user.get('interest', '')
+        skills = user.get('skills', [])
+        bio = user.get('bio', '')
         
         roles_str = ', '.join(roles) if roles else ''
+        skills_str = ', '.join(skills) if skills else ''
         
-        doc_text = f"User: {full_name}. Roles: {roles_str}. Interests: {interest}."
+        doc_text = f"User: {full_name}. Roles: {roles_str}. Interests: {interest}. Skills: {skills_str}. Bio: {bio}."
         metadata = {"doc_type": "user"}
         documents.append((doc_id, doc_text, metadata))
 
