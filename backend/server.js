@@ -4,10 +4,6 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const connectDB = require("./config/database");
-const app = express();
-
-require("dotenv").config();
-
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const helmet = require("helmet");
@@ -15,64 +11,99 @@ const helmet = require("helmet");
 // Connect to MongoDB
 connectDB();
 
+const app = express();
 const port = process.env.PORT || 5000;
 
 // --- CORS SETUP ---
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim().replace(/\/+$/, "")) 
-  : ["http://localhost:5173", "http://localhost:5000"]; 
+const rawOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",") 
+  : ["http://localhost:5173", "http://localhost:5000"];
 
-console.log("CORS: Allowed Origins:", allowedOrigins);
+const allowedOrigins = rawOrigins
+  .map(origin => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
+console.log("🚀 Server Environment Status:");
+console.log("- NODE_ENV:", process.env.NODE_ENV || "development");
+console.log("- PORT:", port);
+console.log("- ALLOWED_ORIGINS:", allowedOrigins);
+console.log("- MONGODB_URI:", process.env.MONGODB_URI ? "✔️ Configured" : "❌ Missing");
+console.log("- JWT_SECRET:", process.env.JWT_SECRET ? "✔️ Configured" : "❌ Missing");
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl requests)
+    // If no origin (like mobile/curl), allow it
     if (!origin) return callback(null, true);
     
-    // Normalize origin for comparison (remove trailing slash)
     const normalizedOrigin = origin.replace(/\/+$/, "");
     
-    if (allowedOrigins.includes("*") || allowedOrigins.includes(normalizedOrigin)) {
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.includes("*") || allowedOrigins.includes(normalizedOrigin);
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`CORS: Origin ${origin} (Normalized: ${normalizedOrigin}) not allowed. Allowed:`, allowedOrigins);
-      callback(new Error("Not allowed by CORS"));
+      console.warn(`⚠️ CORS Rejection: Origin "${origin}" is not in the allowed list.`);
+      // In production, we might want to be strict, but let's allow onrender.com subdomains for now to help debug
+      if (normalizedOrigin.endsWith(".onrender.com")) {
+        console.log(`💡 Auto-allowing onrender.com origin for debugging: ${normalizedOrigin}`);
+        return callback(null, true);
+      }
+      callback(null, false);
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  optionsSuccessStatus: 200,
 };
+
 app.use(cors(corsOptions));
 
 // --- MIDDLEWARE ---
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled for now to avoid blocking Cloudinary/Socket.io
+  contentSecurityPolicy: false, 
 }));
-app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
+app.use(express.json({ limit: '10mb' })); 
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
-app.use(cookieParser()); // Use cookie-parser to read cookies from requests
+app.use(cookieParser());
 
 // --- ROUTES ---
 app.use("/api/v1/users", require("./routes/userRoutes"));
 app.use("/api/v1/project", require("./routes/projectRoutes"));
 app.use("/api/v1/project", require("./routes/taskRoutes"));
 app.use("/api/v1/recommendations", require("./routes/recommendation.routes"));
-// Gemini API route
-const aiRoutes = require("./routes/geminiRoutes");
-app.use("/api/v1/ai", aiRoutes);
-
-const messageRoutes = require("./routes/messageRoutes");
-app.use("/api/v1/messages", messageRoutes);
-
-const adminRoutes = require("./routes/adminRoutes");
-app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/ai", require("./routes/geminiRoutes"));
+app.use("/api/v1/messages", require("./routes/messageRoutes"));
+app.use("/api/v1/admin", require("./routes/adminRoutes"));
 
 // Serve uploaded images statically
 app.use("/api/v1/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.send("MoDX Backend is running!");
+});
+
+// --- 404 HANDLER ---
+app.use((req, res, next) => {
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`
+  });
+});
+
+// --- GLOBAL ERROR HANDLER ---
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  
+  console.error(`[ERROR] ${req.method} ${req.originalUrl}:`, err);
+  
+  res.status(statusCode).json({
+    success: false,
+    message,
+    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+  });
 });
 
 // --- CREATE HTTP SERVER ---
