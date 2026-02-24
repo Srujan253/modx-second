@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     const verifyUser = async () => {
       try {
         // This '/me' route verifies the session cookie on the backend
-        const response = await axiosInstance.get("/users/me");
+        const response = await axiosInstance.get("users/me");
         if (response.data.success) {
           setUser(response.data.user);
         }
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axiosInstance.post("/users/logout");
+      await axiosInstance.post("users/logout");
       setUser(null);
     } catch (error) {
       console.error("Logout failed:", error);

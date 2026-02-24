@@ -17,7 +17,7 @@ const ProjectMessagesList = () => {
     const fetchProjects = async () => {
       try {
         // Get all projects where user is a member (accepted)
-        const { data } = await axiosInstance.get("/project/memberships");
+        const { data } = await axiosInstance.get("project/memberships");
         setProjects(data.accepted || []);
       } catch (err) {
         toast.error("Failed to load your projects.");

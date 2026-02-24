@@ -2,9 +2,8 @@ fastapi
 uvicorn
 python-dotenv
 google-generativeai
-sentence-transformers
 chromadb
-pymongo  # For connecting to MongoDB
+pymongo
 beautifulsoup4
 requests
 grpcio 

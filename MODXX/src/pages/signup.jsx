@@ -201,7 +201,7 @@ const SignupPage = () => {
     if (step === 2) {
       setIsLoading(true);
       try {
-        const response = await axiosInstance.post("/users/register", {
+        const response = await axiosInstance.post("users/register", {
           fullName: formData.fullName,
           email: formData.email,
           password: formData.password,
@@ -235,7 +235,7 @@ const SignupPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axiosInstance.post("/users/verify", {
+      const response = await axiosInstance.post("users/verify", {
         email: formData.email,
         otp: formData.otp,
       });

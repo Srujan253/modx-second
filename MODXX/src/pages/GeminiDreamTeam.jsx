@@ -162,7 +162,7 @@ const MODXChat = () => {
     try {
       // --- API CALL ---
       // Send the user's raw query to your intelligent backend
-      const { data } = await apiClient.post("/ai/chat", {
+      const { data } = await apiClient.post("ai/chat", {
         query: input,
       });
 

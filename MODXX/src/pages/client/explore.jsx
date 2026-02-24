@@ -78,7 +78,7 @@ const ExploreProjects = () => {
     const fetchMemberships = async () => {
       if (!user) return;
       try {
-        const { data } = await apiClient.get(`/project/memberships`);
+        const { data } = await apiClient.get(`project/memberships`);
         setUserMemberships({
           accepted: data.accepted?.map((p) => p.id) || [],
           pending: data.pending?.map((p) => p.id) || [],
@@ -106,7 +106,7 @@ const ExploreProjects = () => {
   // (Your existing handleApply function is perfect, no changes needed)
   const handleApply = async (projectId) => {
     try {
-      const { data } = await apiClient.post(`/project/${projectId}/apply`, {});
+      const { data } = await apiClient.post(`project/${projectId}/apply`, {});
       toast.success(data.message || "Applied successfully!");
       setAppliedProjects((prev) => [...prev, projectId]);
     } catch (error) {

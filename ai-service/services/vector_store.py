@@ -1,11 +1,13 @@
-import chromadb
-from sentence_transformers import SentenceTransformer
+import google.generativeai as genai
 from core.config import (
     EMBEDDING_MODEL, 
     CHROMA_API_KEY, 
     CHROMA_TENANT, 
-    CHROMA_DATABASE
+    CHROMA_DATABASE,
+    GEMINI_API_KEY
 )
+
+genai.configure(api_key=GEMINI_API_KEY)
 
 client = chromadb.CloudClient(
     tenant=CHROMA_TENANT,
@@ -14,7 +16,23 @@ client = chromadb.CloudClient(
 )
 
 collection = client.get_or_create_collection("modx_knowledge_base")
-embedding_model = SentenceTransformer(EMBEDDING_MODEL)
+
+def get_gemini_embeddings(texts):
+    """Helper to get embeddings from Gemini API."""
+    if isinstance(texts, str):
+        texts = [texts]
+    
+    # Process in batches if necessary (Gemini allows multiple)
+    try:
+        results = genai.embed_content(
+            model=EMBEDDING_MODEL,
+            content=texts,
+            task_type="retrieval_document" if len(texts) > 1 else "retrieval_query"
+        )
+        return results['embedding']
+    except Exception as e:
+        print(f"Error getting Gemini embeddings: {e}")
+        return []
 
 def add_documents_to_store(documents_with_metadata):
     """Adds documents with their metadata to Chroma Cloud."""
@@ -24,10 +42,10 @@ def add_documents_to_store(documents_with_metadata):
     documents = [item[1] for item in documents_with_metadata]
     metadatas = [item[2] for item in documents_with_metadata]
     
-    embeddings = embedding_model.encode(documents)
+    embeddings = get_gemini_embeddings(documents)
     
     collection.upsert(
-        embeddings=embeddings.tolist(),
+        embeddings=embeddings,
         documents=documents,
         ids=ids,
         metadatas=metadatas # <-- Save the metadata
@@ -36,7 +54,7 @@ def add_documents_to_store(documents_with_metadata):
 
 def find_similar_document_ids(query_text: str, n_results=10) -> list[str]:
     """Finds the most semantically similar documents based on a query."""
-    query_embedding = embedding_model.encode([query_text]).tolist()
+    query_embedding = get_gemini_embeddings(query_text)
     results = collection.query(
         query_embeddings=query_embedding,
         n_results=n_results,

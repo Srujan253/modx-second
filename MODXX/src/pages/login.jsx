@@ -62,7 +62,7 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await axiosInstance.post("/users/login", formData);
+      const response = await axiosInstance.post("users/login", formData);
       login(response.data.user);
       navigate("/dashboard");
     } catch (err) {

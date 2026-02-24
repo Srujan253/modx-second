@@ -34,10 +34,10 @@ const ProjectTask = () => {
   const handleRemoveMember = async () => {
     if (!memberToRemove) return;
     try {
-      await axiosInstance.delete(`/project/${projectId}/members/${memberToRemove}`);
+      await axiosInstance.delete(`project/${projectId}/members/${memberToRemove}`);
       toast.success("Member removed");
       // Refresh members
-      const res = await axiosInstance.get(`/project/${projectId}/members`);
+      const res = await axiosInstance.get(`project/${projectId}/members`);
       setMembers(res.data.members || []);
     } catch (err) {
       toast.error("Failed to remove member");
@@ -56,7 +56,7 @@ const ProjectTask = () => {
   const handleEditTask = async (taskId, updates) => {
     try {
       const res = await axiosInstance.patch(
-        `/project/${projectId}/tasks/${taskId}`,
+        `project/${projectId}/tasks/${taskId}`,
         updates
       );
       toast.success("Task updated");
@@ -69,7 +69,7 @@ const ProjectTask = () => {
   // Delete handler for tasks
   const handleDeleteTask = async (taskId) => {
     try {
-      await axiosInstance.delete(`/project/${projectId}/tasks/${taskId}`);
+      await axiosInstance.delete(`project/${projectId}/tasks/${taskId}`);
       toast.success("Task deleted");
       // Optionally: trigger a refresh or callback
     } catch (err) {
@@ -91,7 +91,7 @@ const ProjectTask = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const res = await axiosInstance.get(`/project/${projectId}/members`);
+        const res = await axiosInstance.get(`project/${projectId}/members`);
         setMembers(res.data.members || []);
       } catch (err) {
         setMembers([]);
