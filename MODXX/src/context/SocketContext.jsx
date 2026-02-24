@@ -22,7 +22,10 @@ export const SocketProvider = ({ children }) => {
       console.log("User data:", user);
       
       // Connect to Socket.IO server (authentication via cookies)
-      const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api/v1', '') || "http://localhost:5000", {
+      const socketUrl = import.meta.env.VITE_SOCKET_URL || 
+                        import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 
+                        "http://localhost:5000";
+      const newSocket = io(socketUrl, {
         withCredentials: true, // Send cookies with the request
       });
 

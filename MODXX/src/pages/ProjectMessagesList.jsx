@@ -6,7 +6,7 @@ import axiosInstance from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+import { API_URL } from "../api/axiosInstance";
 
 const ProjectMessagesList = () => {
   const { user } = useAuth();

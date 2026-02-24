@@ -1,0 +1,16 @@
+{
+    "name": "modx-monorepo",
+    "version": "1.0.0",
+    "description": "Monorepo orchestration for MoDX application",
+    "main": "index.js",
+    "scripts": {
+        "install:all": "npm install && cd backend && npm install && cd ../MODXX && npm install",
+        "dev:backend": "cd backend && nodemon server.js",
+        "dev:frontend": "cd MODXX && npm run dev",
+        "dev:ai": "cd ai-service && python main.py",
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:ai\""
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.0"
+    }
+}

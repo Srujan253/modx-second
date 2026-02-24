@@ -23,7 +23,7 @@ import {
   FileText,
 } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+import { API_URL } from "../api/axiosInstance";
 
 const Profile = () => {
   const { user, loading } = useAuth();

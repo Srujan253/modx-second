@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
+import axiosInstance, { API_URL } from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import { 
   Plus, 
@@ -20,7 +21,6 @@ import {
   List
 } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
 
 const Dashboard = () => {
   const { user } = useAuth();

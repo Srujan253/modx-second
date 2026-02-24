@@ -27,6 +27,7 @@ import ProjectCreation from "./pages/projectCreate";
 import ProjectEdit from "./pages/ProjectEdit";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import ProjectDetails from "./pages/projectDetails";
 
 function AppContent() {
@@ -68,6 +69,14 @@ function AppContent() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />

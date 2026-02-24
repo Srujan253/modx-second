@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file: ./backend/.env
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - ai-service
+
+  frontend:
+    build: ./MODXX
+    ports:
+      - "5173:5173"
+    env_file: ./MODXX/.env
+    volumes:
+      - ./MODXX:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8000:8000"
+    env_file: ./ai-service/.env
+    volumes:
+      - ./ai-service:/app

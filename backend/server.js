@@ -17,16 +17,22 @@ connectDB();
 const port = process.env.PORT || 5000;
 
 // --- CORS SETUP ---
-const allowedOrigins = ["http://localhost:5173"]; // Add your deployed frontend URL here later
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(",") 
+  : ["http://localhost:5173", "http://localhost:5000"]; 
+
 const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes("*")) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // This allows the browser to send cookies and credentials
+  credentials: true,
 };
 app.use(cors(corsOptions));
 
@@ -46,6 +52,9 @@ app.use("/api/v1/ai", aiRoutes);
 
 const messageRoutes = require("./routes/messageRoutes");
 app.use("/api/v1/messages", messageRoutes);
+
+const adminRoutes = require("./routes/adminRoutes");
+app.use("/api/v1/admin", adminRoutes);
 
 // Serve uploaded images statically
 app.use("/api/v1/uploads", express.static(path.join(__dirname, "uploads")));

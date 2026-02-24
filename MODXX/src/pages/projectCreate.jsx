@@ -22,7 +22,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+import axiosInstance, { API_URL } from "../api/axiosInstance";
 
 // Move InputField outside to prevent re-creation on every render
 const InputField = ({ 
@@ -87,20 +87,24 @@ const TextAreaField = React.memo(({
   errors,
   watchedDescription,
   watchedGoals,
+  watchedMotivation,
   isRewriting,
   aiDisabled,
   rewriteWithAI,
   rewriteGoalsWithAI,
+  rewriteMotivationWithAI,
   descriptionRef,
   goalsRef,
+  motivationRef,
   lastCursorPosition,
   lastGoalsCursorPosition,
+  lastMotivationCursorPosition,
   ...props 
 }) => {
   // Use appropriate ref and cursor position based on field name
-  const textareaRef = name === 'description' ? descriptionRef : name === 'goals' ? goalsRef : useRef(null);
-  const watchedValue = name === 'description' ? watchedDescription : name === 'goals' ? watchedGoals : '';
-  const rewriteFunction = name === 'description' ? rewriteWithAI : name === 'goals' ? rewriteGoalsWithAI : null;
+  const textareaRef = name === 'description' ? descriptionRef : name === 'goals' ? goalsRef : name === 'motivation' ? motivationRef : useRef(null);
+  const watchedValue = name === 'description' ? watchedDescription : name === 'goals' ? watchedGoals : name === 'motivation' ? watchedMotivation : '';
+  const rewriteFunction = name === 'description' ? rewriteWithAI : name === 'goals' ? rewriteGoalsWithAI : name === 'motivation' ? rewriteMotivationWithAI : null;
   
   return (
     <motion.div
@@ -172,6 +176,8 @@ const TextAreaField = React.memo(({
                 lastCursorPosition.current = textareaRef.current.selectionStart;
               } else if (name === 'goals' && textareaRef.current) {
                 lastGoalsCursorPosition.current = textareaRef.current.selectionStart;
+              } else if (name === 'motivation' && textareaRef.current) {
+                lastMotivationCursorPosition.current = textareaRef.current.selectionStart;
               }
               // Call the original onChange from react-hook-form
               return props.validation?.onChange?.(e);
@@ -241,13 +247,16 @@ const ProjectCreation = () => {
   // Refs to preserve cursor position during re-renders
   const descriptionRef = useRef(null);
   const goalsRef = useRef(null);
+  const motivationRef = useRef(null);
   const lastCursorPosition = useRef(null);
   const lastGoalsCursorPosition = useRef(null);
+  const lastMotivationCursorPosition = useRef(null);
 
   // Watch only specific fields that we actually need for UI logic
   // Use selective watching to prevent excessive re-renders
   const watchedDescription = watch("description", "");
   const watchedGoals = watch("goals", "");
+  const watchedMotivation = watch("motivation", "");
 
   // Effect to restore cursor position after re-renders (with dependency check)
   React.useEffect(() => {
@@ -281,6 +290,22 @@ const ProjectCreation = () => {
     }
   });
 
+  // Effect to restore cursor position for motivation field
+  React.useEffect(() => {
+    if (motivationRef.current && lastMotivationCursorPosition.current !== null) {
+      const position = lastMotivationCursorPosition.current;
+      const currentValue = motivationRef.current.value;
+      
+      // Use setTimeout to ensure DOM is updated
+      setTimeout(() => {
+        if (motivationRef.current && position <= currentValue.length) {
+          motivationRef.current.setSelectionRange(position, position);
+          lastMotivationCursorPosition.current = null;
+        }
+      }, 0);
+    }
+  });
+
   // Rate limiting function with enhanced feedback and cooldown tracking
   const checkRateLimit = () => {
     const now = Date.now();
@@ -308,6 +333,27 @@ const ProjectCreation = () => {
       });
     }, 10 * 60 * 1000); // 10 minutes
   }, []);
+
+  // Shared error handler for AI functions
+  const handleAIError = useCallback((error, type = "description") => {
+    console.error(`AI Rewrite ${type} Error:`, error);
+    
+    if (error.response?.status === 429) {
+      console.error("Gemini API Rate Limited:", error.response.data);
+      disableAITemporarily();
+      toast.error(
+        "🚫 AI Temporarily Disabled Due to Rate Limits\n\n📊 Google API limits exceeded (15 requests/minute)\n⏰ AI features disabled for 10 minutes to prevent further issues",
+        { autoClose: 15000, position: "top-center" }
+      );
+    } else if (error.response?.status === 404) {
+      toast.error("🔑 API Configuration Error! Gemini API endpoint not found (404).", { autoClose: 10000 });
+    } else if (error.response) {
+      const errorMsg = error.response.data.error?.message || 'Unknown API error';
+      toast.error(`🤖 AI Enhancement Failed: ${errorMsg}`);
+    } else {
+      toast.error("🤖 AI enhancement temporarily unavailable. Please try again in a few minutes.");
+    }
+  }, [disableAITemporarily, toast]);
 
   // DeepSeek API call function (COMMENTED OUT)
   // const callDeepSeekAPI = useCallback(async (prompt) => {
@@ -590,253 +636,71 @@ Requirements:
       toast.success(`✨ Description enhanced with Gemini AI!`);
 
     } catch (error) {
-      console.error("AI Rewrite Error:", error);
-      
-      // Handle specific error scenarios with user-friendly messages
-      if (error.response?.status === 429) {
-        console.error("Gemini API Rate Limited:", error.response.data);
-        
-        // Enhanced rate limit guidance
-        const currentTime = new Date().toLocaleTimeString();
-        console.log(`⏰ Rate limit hit at: ${currentTime}`);
-        console.log("💡 Suggestion: Wait 15-30 minutes or try a different Google account");
-        
-        // Temporarily disable AI to prevent repeated failures
-        disableAITemporarily();
-        
-        toast.error(
-          "🚫 AI Temporarily Disabled Due to Rate Limits\n\n📊 Google API limits exceeded (15 requests/minute)\n⏰ AI features disabled for 10 minutes to prevent further issues\n\n🔄 Solutions:\n• Continue writing manually for now\n• AI will automatically re-enable in 10 minutes\n• Or wait 30+ minutes and refresh the page",
-          { 
-            autoClose: 20000,
-            position: "top-center",
-            style: {
-              fontSize: '14px',
-              lineHeight: '1.4'
-            }
-          }
-        );
-      } else if (error.response?.status === 404) {
-        toast.error(
-          "🔑 API Configuration Error!\n\n❌ Gemini API endpoint not found (404)\n\n🔧 Possible issues:\n• API key is invalid or expired\n• Generative AI API not enabled in Google Cloud\n• Billing not set up for your Google Cloud project\n• API key lacks necessary permissions\n\n💡 Try: Create a new API key with Generative AI permissions",
-          { 
-            autoClose: 15000,
-            position: "top-center",
-            style: {
-              fontSize: '14px',
-              lineHeight: '1.4'
-            }
-          }
-        );
-      } else if (error.response?.status === 403) {
-        toast.error(
-          "🔑 AI service unavailable: API key issues detected. Please contact support if this continues.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response?.status === 400) {
-        toast.error(
-          "⚠️ Your description content couldn't be processed. Try shortening it or removing special characters.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response?.status === 500) {
-        toast.error(
-          "🔧 AI service is temporarily down for maintenance. Please try again in a few minutes.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response?.status === 503) {
-        toast.error(
-          "🌐 AI service is overloaded right now. Please try again in 2-3 minutes.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response) {
-        console.error("Gemini API Error Response:", error.response.data);
-        const errorMsg = error.response.data.error?.message || 'Unknown API error';
-        toast.error(
-          `🤖 AI Enhancement Failed: ${errorMsg}. Please try again or write manually.`,
-          { autoClose: 6000 }
-        );
-      } else if (error.code === 'ECONNABORTED') {
-        toast.error(
-          "⏱️ Request timed out. Your description might be too long. Try with shorter text.",
-          { autoClose: 6000 }
-        );
-      } else if (error.message.includes('API key')) {
-        toast.error(
-          "🔑 AI service not configured properly. Please contact support.",
-          { autoClose: 6000 }
-        );
-      } else if (error.message.includes('wait')) {
-        // Rate limiting message already shown above
-        return;
-      } else if (error.message.includes('Network Error')) {
-        toast.error(
-          "📡 Network connection issue. Check your internet and try again.",
-          { autoClose: 6000 }
-        );
-      } else {
-        toast.error(
-          "🤖 AI enhancement temporarily unavailable. Please try again in a few minutes or continue writing manually.",
-          { autoClose: 6000 }
-        );
-      }
+      handleAIError(error, "description");
     } finally {
       setIsRewriting(false);
     }
-  }, [getValues, setValue, toast, checkRateLimit, callAIWithFallback]);
+  }, [getValues, setValue, toast, checkRateLimit, callAIWithFallback, handleAIError]);
 
   // AI rewrite function for goals
   const rewriteGoalsWithAI = useCallback(async () => {
-    console.log("🎯 AI Rewrite Goals button clicked!"); // Debug log
+    console.log("🎯 AI Rewrite Goals button clicked!");
     const currentValues = getValues();
     const currentGoals = currentValues.goals;
-    
     if (!currentGoals || currentGoals.trim().length < 10) {
       toast.error("Please enter at least 10 characters in the goals before rewriting.");
       return;
     }
-
-    try {
-      // Check rate limiting before making API call
-      checkRateLimit();
-    } catch (rateLimitError) {
-      toast.warning(rateLimitError.message);
-      return;
-    }
-
+    try { checkRateLimit(); } catch (e) { toast.warning(e.message); return; }
     setIsRewriting(true);
-    
     try {
-      const prompt = `Rewrite and enhance the following project goals and objectives to make them more clear, specific, and actionable while maintaining the core intent. The project title is "${currentValues.title || 'Untitled Project'}".
-
-Original goals:
-"${currentGoals}"
-
-IMPORTANT: Return ONLY the rewritten goals text. Do NOT include any introductory phrases like "Here is", "Here's", "Rewritten goals:", or any explanations. Just return the improved goals directly.
-
-Requirements:
-- Clear and specific language
-- Measurable and actionable goals
-- Highlights main objectives and outcomes
-- Professional project management terminology
-- Well-structured and easy to understand (2-4 key points)`;
-
-      // Call Gemini AI only
+      const prompt = `Rewrite and enhance the following project goals for "${currentValues.title || 'Untitled Project'}". Return ONLY rewritten text. No intros.\n\nOriginal goals:\n"${currentGoals}"`;
       const result = await callAIWithFallback(prompt);
-      
-      // Clean up the response - remove any common prefixes or explanatory text
-      const cleanedText = result.text
-        .replace(/^(Rewritten goals:|Here's the improved version:|Here's an enhanced version:|Here is the|Here's the|Here is your|Here's your|Sure,|Certainly,)/i, '')
-        .replace(/^[:\s]+/, '') // Remove leading colons and whitespace
-        .trim();
-      
-      // Set value and focus to end of text after AI update
-      setValue("goals", cleanedText, { 
-        shouldValidate: true,
-        shouldDirty: true 
-      });
-      
-      // Focus and position cursor at end after AI rewrite
+      const cleanedText = result.text.replace(/^(Rewritten goals:|Here's the version:)/i, '').replace(/^[:\s]+/, '').trim();
+      setValue("goals", cleanedText, { shouldValidate: true, shouldDirty: true });
       setTimeout(() => {
         if (goalsRef.current) {
           goalsRef.current.focus();
           goalsRef.current.setSelectionRange(cleanedText.length, cleanedText.length);
         }
       }, 100);
-      
       toast.success(`🎯 Goals enhanced with Gemini AI!`);
-
     } catch (error) {
-      console.error("AI Rewrite Goals Error:", error);
-      
-      // Handle specific error scenarios with user-friendly messages
-      if (error.response?.status === 429) {
-        console.error("Gemini API Rate Limited:", error.response.data);
-        
-        // Enhanced rate limit guidance
-        const currentTime = new Date().toLocaleTimeString();
-        console.log(`⏰ Rate limit hit at: ${currentTime}`);
-        console.log("💡 Suggestion: Wait 15-30 minutes or try a different Google account");
-        
-        // Temporarily disable AI to prevent repeated failures
-        disableAITemporarily();
-        
-        toast.error(
-          "🚫 AI Temporarily Disabled Due to Rate Limits\n\n📊 Google API limits exceeded (15 requests/minute)\n⏰ AI features disabled for 10 minutes to prevent further issues\n\n🔄 Solutions:\n• Continue writing manually for now\n• AI will automatically re-enable in 10 minutes\n• Or wait 30+ minutes and refresh the page",
-          { 
-            autoClose: 20000,
-            position: "top-center",
-            style: {
-              fontSize: '14px',
-              lineHeight: '1.4'
-            }
-          }
-        );
-      } else if (error.response?.status === 404) {
-        toast.error(
-          "🔑 API Configuration Error!\n\n❌ Gemini API endpoint not found (404)\n\n🔧 Possible issues:\n• API key is invalid or expired\n• Generative AI API not enabled in Google Cloud\n• Billing not set up for your Google Cloud project\n• API key lacks necessary permissions\n\n💡 Try: Create a new API key with Generative AI permissions",
-          { 
-            autoClose: 15000,
-            position: "top-center",
-            style: {
-              fontSize: '14px',
-              lineHeight: '1.4'
-            }
-          }
-        );
-      } else if (error.response?.status === 403) {
-        toast.error(
-          "🔑 AI service unavailable: API key issues detected. Please contact support if this continues.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response?.status === 400) {
-        toast.error(
-          "⚠️ Your goals content couldn't be processed. Try shortening it or removing special characters.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response?.status === 500) {
-        toast.error(
-          "🔧 AI service is temporarily down for maintenance. Please try again in a few minutes.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response?.status === 503) {
-        toast.error(
-          "🌐 AI service is overloaded right now. Please try again in 2-3 minutes.",
-          { autoClose: 6000 }
-        );
-      } else if (error.response) {
-        console.error("Gemini API Error Response:", error.response.data);
-        const errorMsg = error.response.data.error?.message || 'Unknown API error';
-        toast.error(
-          `🤖 Goals Enhancement Failed: ${errorMsg}. Please try again or write manually.`,
-          { autoClose: 6000 }
-        );
-      } else if (error.code === 'ECONNABORTED') {
-        toast.error(
-          "⏱️ Request timed out. Your goals might be too long. Try with shorter text.",
-          { autoClose: 6000 }
-        );
-      } else if (error.message.includes('API key')) {
-        toast.error(
-          "🔑 AI service not configured properly. Please contact support.",
-          { autoClose: 6000 }
-        );
-      } else if (error.message.includes('wait')) {
-        // Rate limiting message already shown above
-        return;
-      } else if (error.message.includes('Network Error')) {
-        toast.error(
-          "📡 Network connection issue. Check your internet and try again.",
-          { autoClose: 6000 }
-        );
-      } else {
-        toast.error(
-          "🤖 Goals enhancement temporarily unavailable. Please try again in a few minutes or continue writing manually.",
-          { autoClose: 6000 }
-        );
-      }
+      handleAIError(error, "goals");
     } finally {
       setIsRewriting(false);
     }
-  }, [getValues, setValue, toast, checkRateLimit, callAIWithFallback]);
+  }, [getValues, setValue, toast, checkRateLimit, callAIWithFallback, handleAIError]);
+
+  // AI rewrite function for motivation
+  const rewriteMotivationWithAI = useCallback(async () => {
+    console.log("🚀 AI Rewrite Motivation button clicked!");
+    const currentValues = getValues();
+    const currentMotivation = currentValues.motivation;
+    if (!currentMotivation || currentMotivation.trim().length < 10) {
+      toast.error("Please enter at least 10 characters in the motivation before rewriting.");
+      return;
+    }
+    try { checkRateLimit(); } catch (e) { toast.warning(e.message); return; }
+    setIsRewriting(true);
+    try {
+      const prompt = `Rewrite and enhance the following project motivation for "${currentValues.title || 'Untitled Project'}". Return ONLY rewritten text. No intros.\n\nOriginal motivation:\n"${currentMotivation}"`;
+      const result = await callAIWithFallback(prompt);
+      const cleanedText = result.text.replace(/^(Rewritten motivation:|Here's the version:)/i, '').replace(/^[:\s]+/, '').trim();
+      setValue("motivation", cleanedText, { shouldValidate: true, shouldDirty: true });
+      setTimeout(() => {
+        if (motivationRef.current) {
+          motivationRef.current.focus();
+          motivationRef.current.setSelectionRange(cleanedText.length, cleanedText.length);
+        }
+      }, 100);
+      toast.success(`🚀 Motivation enhanced with Gemini AI!`);
+    } catch (error) {
+      handleAIError(error, "motivation");
+    } finally {
+      setIsRewriting(false);
+    }
+  }, [getValues, setValue, toast, checkRateLimit, callAIWithFallback, handleAIError]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800">
@@ -986,13 +850,23 @@ Requirements:
                     placeholder="Why should others join this project? What's the inspiring vision?"
                     required={false}
                     rows={3}
+                    showAIRewrite={true}
                     register={register}
                     errors={errors}
                     watchedDescription={watchedDescription}
+                    watchedGoals={watchedGoals}
+                    watchedMotivation={watchedMotivation}
                     isRewriting={isRewriting}
                     aiDisabled={aiDisabled}
+                    rewriteWithAI={rewriteWithAI}
+                    rewriteGoalsWithAI={rewriteGoalsWithAI}
+                    rewriteMotivationWithAI={rewriteMotivationWithAI}
                     descriptionRef={descriptionRef}
+                    goalsRef={goalsRef}
+                    motivationRef={motivationRef}
                     lastCursorPosition={lastCursorPosition}
+                    lastGoalsCursorPosition={lastGoalsCursorPosition}
+                    lastMotivationCursorPosition={lastMotivationCursorPosition}
                     validation={{
                       maxLength: { value: 500, message: "Motivation must be under 500 characters" }
                     }}

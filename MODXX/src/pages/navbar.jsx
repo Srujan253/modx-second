@@ -13,7 +13,8 @@ import {
   Info,
   Plus,
   Search,
-  Compass
+  Compass,
+  Shield
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext"; // <-- Import the real useAuth hook
 
@@ -199,6 +200,14 @@ const Navbar = () => {
                       >
                         <User size={16} className="mr-3" /> Profile
                       </Link>
+                      {user.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-orange-500 transition-colors"
+                        >
+                          <Shield size={16} className="mr-3" /> Admin Panel
+                        </Link>
+                      )}
                       <Link
                         to={
                           user && user.current_project_id
@@ -382,6 +391,16 @@ const Navbar = () => {
                     <User size={16} className="mr-3" />
                     Profile
                   </Link>
+                  {user.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      className="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-orange-500 rounded-md transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Shield size={16} className="mr-3" />
+                      Admin Panel
+                    </Link>
+                  )}
                   <Link
                     to="/dashboard"
                     className="flex items-center px-3 py-2 text-gray-300 hover:bg-gray-700 hover:text-orange-500 rounded-md transition-colors"

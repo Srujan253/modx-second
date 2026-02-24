@@ -19,7 +19,8 @@ import {
   Palette,
   GraduationCap,
   Users,
-  MoreHorizontal
+  MoreHorizontal,
+  BookOpen
 } from "lucide-react";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -133,7 +134,7 @@ const SignupPage = () => {
 
   const roleIcons = {
     Developer: Code,
-    Designer: Palette,
+    Teacher: BookOpen,
     Student: GraduationCap,
     "Project Manager": Users,
     Other: MoreHorizontal
@@ -336,7 +337,7 @@ const SignupPage = () => {
                 What is your primary role?
               </label>
               <div className="grid grid-cols-1 gap-3">
-                {["Developer", "Designer", "Student", "Project Manager", "Other"].map((role) => {
+                {["Developer", "Teacher", "Student", "Project Manager", "Other"].map((role) => {
                   const IconComponent = roleIcons[role];
                   return (
                     <motion.button

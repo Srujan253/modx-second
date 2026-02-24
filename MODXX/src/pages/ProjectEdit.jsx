@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+import { API_URL } from "../api/axiosInstance";
 
 // Move InputField outside to prevent re-creation on every render
 const InputField = ({ 
@@ -86,20 +86,24 @@ const TextAreaField = React.memo(({
   errors,
   watchedDescription,
   watchedGoals,
+  watchedMotivation,
   isRewriting,
   aiDisabled,
   rewriteWithAI,
   rewriteGoalsWithAI,
+  rewriteMotivationWithAI,
   descriptionRef,
   goalsRef,
+  motivationRef,
   lastCursorPosition,
   lastGoalsCursorPosition,
+  lastMotivationCursorPosition,
   ...props 
 }) => {
   // Use appropriate ref and cursor position based on field name
-  const textareaRef = name === 'description' ? descriptionRef : name === 'goals' ? goalsRef : useRef(null);
-  const watchedValue = name === 'description' ? watchedDescription : name === 'goals' ? watchedGoals : '';
-  const rewriteFunction = name === 'description' ? rewriteWithAI : name === 'goals' ? rewriteGoalsWithAI : null;
+  const textareaRef = name === 'description' ? descriptionRef : name === 'goals' ? goalsRef : name === 'motivation' ? motivationRef : useRef(null);
+  const watchedValue = name === 'description' ? watchedDescription : name === 'goals' ? watchedGoals : name === 'motivation' ? watchedMotivation : '';
+  const rewriteFunction = name === 'description' ? rewriteWithAI : name === 'goals' ? rewriteGoalsWithAI : name === 'motivation' ? rewriteMotivationWithAI : null;
   
   return (
     <motion.div
@@ -171,6 +175,8 @@ const TextAreaField = React.memo(({
                 lastCursorPosition.current = textareaRef.current.selectionStart;
               } else if (name === 'goals' && textareaRef.current) {
                 lastGoalsCursorPosition.current = textareaRef.current.selectionStart;
+              } else if (name === 'motivation' && textareaRef.current) {
+                lastMotivationCursorPosition.current = textareaRef.current.selectionStart;
               }
               // Call the original onChange from react-hook-form
               return props.validation?.onChange?.(e);
@@ -187,6 +193,8 @@ const TextAreaField = React.memo(({
               lastCursorPosition.current = e.target.selectionStart;
             } else if (name === 'goals') {
               lastGoalsCursorPosition.current = e.target.selectionStart;
+            } else if (name === 'motivation') {
+              lastMotivationCursorPosition.current = e.target.selectionStart;
             }
           }}
           onKeyUp={(e) => {
@@ -194,6 +202,8 @@ const TextAreaField = React.memo(({
               lastCursorPosition.current = e.target.selectionStart;
             } else if (name === 'goals') {
               lastGoalsCursorPosition.current = e.target.selectionStart;
+            } else if (name === 'motivation') {
+              lastMotivationCursorPosition.current = e.target.selectionStart;
             }
           }}
           onMouseUp={(e) => {
@@ -201,6 +211,8 @@ const TextAreaField = React.memo(({
               lastCursorPosition.current = e.target.selectionStart;
             } else if (name === 'goals') {
               lastGoalsCursorPosition.current = e.target.selectionStart;
+            } else if (name === 'motivation') {
+              lastMotivationCursorPosition.current = e.target.selectionStart;
             }
           }}
         />
@@ -241,11 +253,14 @@ const ProjectEdit = () => {
 
   const descriptionRef = useRef(null);
   const goalsRef = useRef(null);
+  const motivationRef = useRef(null);
   const lastCursorPosition = useRef(null);
   const lastGoalsCursorPosition = useRef(null);
+  const lastMotivationCursorPosition = useRef(null);
 
   const watchedDescription = watch("description", "");
   const watchedGoals = watch("goals", "");
+  const watchedMotivation = watch("motivation", "");
 
   useEffect(() => {
     if (descriptionRef.current && lastCursorPosition.current !== null) {
@@ -273,6 +288,19 @@ const ProjectEdit = () => {
     }
   });
 
+  useEffect(() => {
+    if (motivationRef.current && lastMotivationCursorPosition.current !== null) {
+      const position = lastMotivationCursorPosition.current;
+      const currentValue = motivationRef.current.value;
+      setTimeout(() => {
+        if (motivationRef.current && position <= currentValue.length) {
+          motivationRef.current.setSelectionRange(position, position);
+          lastMotivationCursorPosition.current = null;
+        }
+      }, 0);
+    }
+  });
+
   const checkRateLimit = () => {
     const now = Date.now();
     const timeSinceLastCall = now - lastAICall;
@@ -291,6 +319,16 @@ const ProjectEdit = () => {
       toast.info("🔄 AI features are back online!");
     }, 10 * 60 * 1000);
   }, []);
+
+  const handleAIError = useCallback((error, type = "description") => {
+    console.error(`AI Rewrite ${type} Error:`, error);
+    if (error.response?.status === 429) {
+      disableAITemporarily();
+      toast.error("🚫 AI Temporarily Disabled Due to Rate Limits", { autoClose: 15000 });
+    } else {
+      toast.error(`AI enhancement failed for ${type}. Please try again later.`);
+    }
+  }, [disableAITemporarily]);
 
   const callGeminiAPI = useCallback(async (prompt) => {
     const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -338,10 +376,9 @@ const ProjectEdit = () => {
       }, 100);
       toast.success(`✨ Description enhanced!`);
     } catch (error) {
-      if (error.response?.status === 429) disableAITemporarily();
-      toast.error("AI enhancement failed. Please try again later.");
+      handleAIError(error, "description");
     } finally { setIsRewriting(false); }
-  }, [getValues, setValue, callAIWithFallback, checkRateLimit, disableAITemporarily]);
+  }, [getValues, setValue, callAIWithFallback, checkRateLimit, handleAIError]);
 
   const rewriteGoalsWithAI = useCallback(async () => {
     const currentValues = getValues();
@@ -365,10 +402,35 @@ const ProjectEdit = () => {
       }, 100);
       toast.success(`🎯 Goals enhanced!`);
     } catch (error) {
-      if (error.response?.status === 429) disableAITemporarily();
-      toast.error("AI enhancement failed. Please try again later.");
+      handleAIError(error, "goals");
     } finally { setIsRewriting(false); }
-  }, [getValues, setValue, callAIWithFallback, checkRateLimit, disableAITemporarily]);
+  }, [getValues, setValue, callAIWithFallback, checkRateLimit, handleAIError]);
+
+  const rewriteMotivationWithAI = useCallback(async () => {
+    const currentValues = getValues();
+    const currentMotivation = currentValues.motivation;
+    if (!currentMotivation || currentMotivation.trim().length < 10) {
+      toast.error("Please enter at least 10 characters before rewriting.");
+      return;
+    }
+    try { checkRateLimit(); } catch (e) { toast.warning(e.message); return; }
+    setIsRewriting(true);
+    try {
+      const prompt = `Rewrite and enhance the following project motivation for "${currentValues.title || 'Untitled'}". Return ONLY rewritten text.\nOriginal: "${currentMotivation}"`;
+      const result = await callAIWithFallback(prompt);
+      const cleanedText = result.text.replace(/^(Rewritten motivation:|Here's the version:)/i, '').replace(/^[:\s]+/, '').trim();
+      setValue("motivation", cleanedText, { shouldValidate: true, shouldDirty: true });
+      setTimeout(() => {
+        if (motivationRef.current) {
+          motivationRef.current.focus();
+          motivationRef.current.setSelectionRange(cleanedText.length, cleanedText.length);
+        }
+      }, 100);
+      toast.success(`🚀 Motivation enhanced!`);
+    } catch (error) {
+      handleAIError(error, "motivation");
+    } finally { setIsRewriting(false); }
+  }, [getValues, setValue, callAIWithFallback, checkRateLimit, handleAIError]);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -555,8 +617,15 @@ const ProjectEdit = () => {
             placeholder="Why should members join?"
             required={false}
             rows={3}
+            showAIRewrite={true}
             register={register}
             errors={errors}
+            watchedMotivation={watchedMotivation}
+            isRewriting={isRewriting}
+            aiDisabled={aiDisabled}
+            rewriteMotivationWithAI={rewriteMotivationWithAI}
+            motivationRef={motivationRef}
+            lastMotivationCursorPosition={lastMotivationCursorPosition}
           />
 
           <div className="grid md:grid-cols-2 gap-6">

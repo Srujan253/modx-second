@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import apiClient from "../api/axiosInstance"; // Your central API client
 import { Sparkles, ArrowRight } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+import { API_URL } from "../api/axiosInstance";
 
 // Helper to get the image URL for a project
 function getImageUrl(imagePath) {
