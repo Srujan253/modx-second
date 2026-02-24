@@ -41,22 +41,36 @@ exports.register = async (req, res) => {
       isVerified: true, // Automatically verify for now
     });
 
-    // Commented out email verification for now
-    /*
-    await sendEmail({
-      email: newUser.email,
-      subject: "Your MoDX Verification Code",
-      message: `Welcome to MoDX! Your verification code is: ${otp}`,
-    });
-    */
-
     res.status(201).json({
+      success: true,
       message: "Registration successful! You can now login.",
-      skipVerification: true, // Hint for frontend
+      skipVerification: true, 
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error during registration." });
+    console.error("Registration Error:", error);
+    
+    // Check for duplicate email error (MongoDB code 11000)
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email is already registered. Please login instead." 
+      });
+    }
+
+    // Check for Mongoose validation errors
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ 
+        success: false, 
+        message: messages.join(", ") 
+      });
+    }
+
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error during registration.",
+      debug: process.env.NODE_ENV === "production" ? null : error.message 
+    });
   }
 };
 
