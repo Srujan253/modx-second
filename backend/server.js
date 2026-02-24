@@ -10,6 +10,7 @@ require("dotenv").config();
 
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const helmet = require("helmet");
 
 // Connect to MongoDB
 connectDB();
@@ -37,6 +38,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // --- MIDDLEWARE ---
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for now to avoid blocking Cloudinary/Socket.io
+}));
 app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser()); // Use cookie-parser to read cookies from requests

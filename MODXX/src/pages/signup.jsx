@@ -201,14 +201,20 @@ const SignupPage = () => {
     if (step === 2) {
       setIsLoading(true);
       try {
-        await axiosInstance.post("/users/register", {
+        const response = await axiosInstance.post("/users/register", {
           fullName: formData.fullName,
           email: formData.email,
           password: formData.password,
           role: formData.role,
           interests: formData.interests,
         });
-        setStep(step + 1);
+        
+        if (response.data.skipVerification) {
+          toast.success(response.data.message);
+          navigate("/login");
+        } else {
+          setStep(step + 1);
+        }
       } catch (err) {
         setError(
           err.response?.data?.message || "An error occurred. Please try again."

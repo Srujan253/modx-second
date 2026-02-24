@@ -38,16 +38,21 @@ exports.register = async (req, res) => {
       interests: interests || [],
       otpCode: otp,
       otpExpiresAt: otpExpires,
+      isVerified: true, // Automatically verify for now
     });
 
+    // Commented out email verification for now
+    /*
     await sendEmail({
       email: newUser.email,
       subject: "Your MoDX Verification Code",
       message: `Welcome to MoDX! Your verification code is: ${otp}`,
     });
+    */
 
     res.status(201).json({
-      message: "Registration successful! An OTP has been sent to your email.",
+      message: "Registration successful! You can now login.",
+      skipVerification: true, // Hint for frontend
     });
   } catch (error) {
     console.error(error);
@@ -142,11 +147,13 @@ exports.login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
+    /* 
     if (!user.isVerified) {
       return res
         .status(401)
         .json({ message: "Please verify your email before logging in." });
     }
+    */
     sendToken(user, 200, res, "Login successful.");
   } catch (error) {
     console.error(error);
