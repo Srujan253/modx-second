@@ -62,7 +62,7 @@ const ProjectTasks = (props) => {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/project/${projectId}/tasks`);
+      const res = await axiosInstance.get(`project/${projectId}/tasks`);
       // Support both array and {tasks: array} response for compatibility
       setTasks(Array.isArray(res.data) ? res.data : res.data.tasks || []);
     } catch (err) {
@@ -80,7 +80,7 @@ const ProjectTasks = (props) => {
     setLoading(true);
     setError("");
     try {
-      await axiosInstance.post(`/project/${projectId}/tasks`, form);
+      await axiosInstance.post(`project/${projectId}/tasks`, form);
       setForm({ title: "", description: "", deadline: "", assigned_to: "" });
       setShowForm(false);
       fetchTasks();
@@ -94,7 +94,7 @@ const ProjectTasks = (props) => {
     setLoading(true);
     setError("");
     try {
-      await axiosInstance.patch(`/project/${projectId}/tasks/${taskId}`, {
+      await axiosInstance.patch(`project/${projectId}/tasks/${taskId}`, {
         status: "done",
       });
       fetchTasks();

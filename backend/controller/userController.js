@@ -2,7 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/email");
 const sendToken = require("../utils/sendToken");
-const { triggerIndexing } = require("../grpcClient");
+const { indexNewData: triggerIndexing } = require("../aiHttpClient");
 
 // Public profile fetch by userId
 exports.getUserPublicProfile = async (req, res) => {

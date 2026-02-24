@@ -22,7 +22,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 
-import axiosInstance, { API_URL } from "../api/axiosInstance";
+import axiosInstance from "../api/axiosInstance";
 
 // Move InputField outside to prevent re-creation on every render
 const InputField = ({ 
@@ -518,8 +518,7 @@ const ProjectCreation = () => {
         projectImage: projectImageBase64 ? `base64 string (${projectImageBase64.length} chars)` : null
       });
 
-      const response = await axios.post(`${API_URL}/project`, submitData, {
-        withCredentials: true,
+      const response = await axiosInstance.post("project", submitData, {
         headers: { "Content-Type": "application/json" },
       });
       toast.success("🎉 " + response.data.message);

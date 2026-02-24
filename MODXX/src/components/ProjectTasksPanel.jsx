@@ -12,7 +12,7 @@ const ProjectTasksPanel = ({ projectId }) => {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const res = await axiosInstance.get(`/project/${projectId}/members`);
+        const res = await axiosInstance.get(`project/${projectId}/members`);
         setMembers(res.data.members || []);
       } catch (err) {
         setMembers([]);

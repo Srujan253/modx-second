@@ -1,10 +1,9 @@
 fastapi
 uvicorn
+pydantic
 python-dotenv
 google-generativeai
 chromadb
 pymongo
 beautifulsoup4
 requests
-grpcio 
-grpcio-tools

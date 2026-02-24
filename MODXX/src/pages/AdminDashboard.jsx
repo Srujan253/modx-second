@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import { 
   Users, 
@@ -15,7 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 
-import { API_URL } from "../api/axiosInstance";
+// (Import moved up or handled by axiosInstance)
 
 const AdminDashboard = () => {
   const { user: currentUser } = useAuth();
@@ -29,7 +29,7 @@ const AdminDashboard = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${API_URL}/admin/users`, { withCredentials: true });
+      const { data } = await axiosInstance.get("admin/users");
       if (data.success) {
         setUsers(data.users);
       }
@@ -46,10 +46,9 @@ const AdminDashboard = () => {
 
   const handlePromote = async (userId) => {
     try {
-      const { data } = await axios.patch(
-        `${API_URL}/admin/users/${userId}/promote`,
-        {},
-        { withCredentials: true }
+      const { data } = await axiosInstance.patch(
+        `admin/users/${userId}/promote`,
+        {}
       );
       if (data.success) {
         toast.success(data.message);
@@ -63,9 +62,8 @@ const AdminDashboard = () => {
   const handleDelete = async () => {
     if (!userToDelete) return;
     try {
-      const { data } = await axios.delete(
-        `${API_URL}/admin/users/${userToDelete._id}`,
-        { withCredentials: true }
+      const { data } = await axiosInstance.delete(
+        `admin/users/${userToDelete._id}`
       );
       if (data.success) {
         toast.success("User deleted successfully.");

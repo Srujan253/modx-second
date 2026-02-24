@@ -5,7 +5,7 @@ const {
   getUserRecommendations,
   getRelatedProjects,
   searchProjects,
-} = require("../grpcClient");
+} = require("../aiHttpClient");
 const ErrorHandler = require("../utils/errorHandler");
 
 // Helper function to extract numerical IDs from strings like "project_123"
@@ -62,8 +62,8 @@ exports.recommendForUser = async (req, res, next) => {
       const profileText = `User with interests in ${user.interests?.join(", ") || "none"} and skills in ${user.skills?.join(", ") || "none"}. Bio: ${user.bio || "none"}`;
 
       // Step 1: Try to get recommendations from AI service
-      const response = await getUserRecommendations(profileText);
-      const recommendedIds = extractProjectIds(response.recommended_ids || []);
+      const recommendedIdsStr = await getUserRecommendations(profileText);
+      const recommendedIds = extractProjectIds(recommendedIdsStr || []);
 
       if (recommendedIds.length > 0) {
         // Step 2: Split into top 6 and remaining
@@ -131,8 +131,8 @@ exports.recommendRelated = async (req, res, next) => {
     const projectText = `Project titled "${project.title}" with description: ${project.description}. Technologies: ${techStr}. Skills: ${skillsStr}`;
 
     // Step 1: Get the top 6 related project IDs from the AI service
-    const response = await getRelatedProjects(projectText);
-    const recommendedIds = extractProjectIds(response.recommended_ids || []).filter(
+    const recommendedIdsStr = await getRelatedProjects(projectText);
+    const recommendedIds = extractProjectIds(recommendedIdsStr || []).filter(
       (id) => id !== currentProjectId
     );
 
@@ -173,8 +173,8 @@ exports.searchByQuery = async (req, res, next) => {
         .json({ success: false, message: "Search query is required." });
 
     // Step 1: Get the top 6 search result IDs from the AI service
-    const response = await searchProjects(q);
-    const resultIds = extractProjectIds(response.recommended_ids || []);
+    const recommendedIdsStr = await searchProjects(q);
+    const resultIds = extractProjectIds(recommendedIdsStr || []);
 
     // Step 2: Fetch the full details for these IDs
     const projects = await fetchFullProjectDetails(resultIds);

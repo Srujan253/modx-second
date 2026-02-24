@@ -9,13 +9,14 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { API_URL } from "../api/axiosInstance";
+import { BASE_URL } from "../api/axiosInstance";
 
 // Helper to get the image URL for a project
 function getImageUrl(imagePath) {
   if (!imagePath) return "https://placehold.co/600x400/1f2937/d1d5db?text=Project+Image";
   if (imagePath.startsWith("http")) return imagePath;
-  return `${API_URL}${imagePath.startsWith("/") ? "" : "/"}${imagePath}`;
+  const cleanPath = imagePath.startsWith("/") ? imagePath.substring(1) : imagePath;
+  return `${BASE_URL}${cleanPath}`;
 }
 
 const ProjectCard = ({

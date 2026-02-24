@@ -19,7 +19,7 @@ import {
   Badge,
 } from "lucide-react";
 
-import { API_URL } from "../api/axiosInstance";
+import axiosInstance from "../api/axiosInstance";
 
 const ApplyJoinSystem = () => {
   const { user } = useAuth();
@@ -31,8 +31,8 @@ const ApplyJoinSystem = () => {
   useEffect(() => {
     if (!user) return;
     // Fetch projects created by the user (leader)
-    axios
-      .get(`${API_URL}/project/user-projects`, { withCredentials: true })
+    axiosInstance
+      .get("project/user-projects")
       .then((res) => setMyProjects(res.data.projects || []))
       .catch(() => toast.error("Failed to fetch your projects."));
   }, [user]);
@@ -42,9 +42,8 @@ const ApplyJoinSystem = () => {
     setLoading(true);
     try {
       // Fetch users who are not already members of this project
-      const { data } = await axios.get(
-        `${API_URL}/project/${projectId}/potential-members`,
-        { withCredentials: true }
+      const { data } = await axiosInstance.get(
+        `project/${projectId}/potential-members`
       );
       setPotentialMembers(data.users || []);
     } catch {
@@ -55,10 +54,9 @@ const ApplyJoinSystem = () => {
 
   const handleSendInvite = async (userId) => {
     try {
-      await axios.post(
-        `${API_URL}/project/${selectedProject}/invite`,
-        { userId },
-        { withCredentials: true }
+      await axiosInstance.post(
+        `project/${selectedProject}/invite`,
+        { userId }
       );
       toast.success("Invitation sent!");
       setPotentialMembers((prev) => prev.filter((u) => u.id !== userId));

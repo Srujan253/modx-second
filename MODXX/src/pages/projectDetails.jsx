@@ -9,7 +9,7 @@ import MyTaskPanel from "../components/MyTaskPanel";
 import RelatedProjects from "../components/RelatedProjects";
 import Modal from "../components/Modal";
 
-import { API_URL } from "../api/axiosInstance";
+import axiosInstance, { BASE_URL } from "../api/axiosInstance";
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
@@ -26,13 +26,11 @@ const ProjectDetails = () => {
         // Try public endpoint first (for explore page), fallback to protected if needed
         let data;
         try {
-          const res = await axios.get(`${API_URL}/project/public/${projectId}`);
+          const res = await axiosInstance.get(`project/public/${projectId}`);
           data = res.data;
         } catch (err) {
           // fallback to protected route if public fails (e.g. for members-only features)
-          const res = await axios.get(`${API_URL}/project/${projectId}`, {
-            withCredentials: true,
-          });
+          const res = await axiosInstance.get(`project/${projectId}`);
           data = res.data;
         }
         setProject(data.project);
@@ -53,10 +51,7 @@ const ProjectDetails = () => {
       if (!project || !user || project.leader_id !== user.id) return;
       setRequestsLoading(true);
       try {
-        const { data } = await axios.get(
-          `${API_URL}/project/${projectId}/requests`,
-          { withCredentials: true }
-        );
+        const { data } = await axiosInstance.get(`project/${projectId}/requests`);
         setPendingRequests(data.requests);
       } catch (error) {
         setPendingRequests([]);
@@ -123,10 +118,10 @@ const ProjectDetails = () => {
   const getImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith("/uploads/")) {
-      return `${API_URL}${url}`;
+      return `${BASE_URL}${url.substring(1)}`;
     }
     if (url.startsWith("/api/v1/uploads/")) {
-      return `${API_URL}${url.replace("/api/v1", "")}`;
+      return `${BASE_URL}${url.replace("/api/v1/", "")}`;
     }
     return url;
   };
@@ -171,11 +166,7 @@ const ProjectDetails = () => {
                         className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-semibold"
                         onClick={async () => {
                           try {
-                            await axios.post(
-                              `${API_URL}/project/${projectId}/requests/${req.id}/accept`,
-                              {},
-                              { withCredentials: true }
-                            );
+                            await axiosInstance.post(`project/${projectId}/requests/${req.id}/accept`, {});
                             toast.success("Request accepted and member added.");
                             setPendingRequests((prev) =>
                               prev.filter((r) => r.id !== req.id)
@@ -191,10 +182,7 @@ const ProjectDetails = () => {
                         className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded font-semibold"
                         onClick={async () => {
                           try {
-                            await axios.delete(
-                              `${API_URL}/project/${projectId}/requests/${req.id}`,
-                              { withCredentials: true }
-                            );
+                            await axiosInstance.delete(`project/${projectId}/requests/${req.id}`);
                             toast.info("Request rejected and removed.");
                             setPendingRequests((prev) =>
                               prev.filter((r) => r.id !== req.id)
@@ -317,9 +305,7 @@ const ProjectDetails = () => {
           onClose={() => setIsDeleteModalOpen(false)}
           onConfirm={async () => {
             try {
-              await axios.delete(`${API_URL}/project/${projectId}`, {
-                withCredentials: true,
-              });
+              await axiosInstance.delete(`project/${projectId}`);
               toast.success("Project deleted successfully.");
               window.location.href = "/dashboard";
             } catch (error) {

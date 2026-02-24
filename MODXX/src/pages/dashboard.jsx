@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import axiosInstance, { API_URL } from "../api/axiosInstance";
+import axiosInstance, { BASE_URL } from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import { 
   Plus, 
@@ -36,25 +36,16 @@ const Dashboard = () => {
   const fetchAll = async () => {
     try {
       // 1. Projects created by user
-      const { data: myProjects } = await axios.get(
-        `${API_URL}/project/user-projects`,
-        { withCredentials: true }
-      );
+      const { data: myProjects } = await axiosInstance.get("project/user-projects");
       setProjects(myProjects.projects);
 
       // 2. Projects where user is a member (accepted) or has pending request
-      const { data: memberData } = await axios.get(
-        `${API_URL}/project/memberships`,
-        { withCredentials: true }
-      );
+      const { data: memberData } = await axiosInstance.get("project/memberships");
       setSelectedProjects(memberData.accepted || []);
       setPendingRequests(memberData.pending || []);
 
       // 3. Fetch project invites (status: 'invited')
-      const { data: inviteData } = await axios.get(
-        `${API_URL}/project/invites`,
-        { withCredentials: true }
-      );
+      const { data: inviteData } = await axiosInstance.get("project/invites");
       setInvites(inviteData.invites || []);
     } catch (error) {
       toast.error(
@@ -73,10 +64,9 @@ const Dashboard = () => {
   // Accept invite (set status to 'accepted')
   const handleAcceptInvite = async (inviteId, projectId) => {
     try {
-      await axios.patch(
-        `${API_URL}/project/${projectId}/requests/${inviteId}`,
-        { status: "accepted" },
-        { withCredentials: true }
+      await axiosInstance.patch(
+        `project/${projectId}/requests/${inviteId}`,
+        { status: "accepted" }
       );
       toast.success("Invitation accepted!");
       fetchAll(); // Refresh dashboard data
@@ -88,9 +78,8 @@ const Dashboard = () => {
   // Reject invite (delete the invite row)
   const handleRejectInvite = async (inviteId, projectId) => {
     try {
-      await axios.delete(
-        `${API_URL}/project/${projectId}/requests/${inviteId}`,
-        { withCredentials: true }
+      await axiosInstance.delete(
+        `project/${projectId}/requests/${inviteId}`
       );
       toast.success("Invitation rejected.");
       fetchAll(); // Refresh dashboard data
@@ -114,9 +103,9 @@ const Dashboard = () => {
       <img
         src={
           project.project_image
-            ? project.project_image.startsWith("/uploads/")
-              ? `${API_URL}${project.project_image}`
-              : project.project_image
+            ? project.project_image.startsWith("http")
+              ? project.project_image
+              : `${BASE_URL}${project.project_image.startsWith("/") ? project.project_image.substring(1) : project.project_image}`
             : "https://placehold.co/600x400/1f2937/d1d5db?text=Project+Image"
         }
         alt={project.title}

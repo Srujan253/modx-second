@@ -23,7 +23,7 @@ import {
   FileText,
 } from "lucide-react";
 
-import { API_URL } from "../api/axiosInstance";
+import axiosInstance, { BASE_URL } from "../api/axiosInstance";
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -84,10 +84,9 @@ const Profile = () => {
         updateData.profileImage = profileImage;
       }
 
-      await axios.patch(
-        `${API_URL}/users/me`,
-        updateData,
-        { withCredentials: true }
+      await axiosInstance.patch(
+        "users/me",
+        updateData
       );
       window.location.reload();
     } catch (err) {
@@ -114,8 +113,8 @@ const Profile = () => {
         // Upload immediately with all existing user data
         try {
           console.log("Uploading image to Cloudinary...");
-          const response = await axios.patch(
-            `${API_URL}/users/me`,
+          const response = await axiosInstance.patch(
+            "users/me",
             { 
               profileImage: base64Image,
               full_name: user.full_name,
@@ -123,8 +122,7 @@ const Profile = () => {
               interests: user.interests || [],
               skills: user.skills || [],
               bio: user.bio || ""
-            },
-            { withCredentials: true }
+            }
           );
           console.log("Upload successful:", response.data);
           
@@ -166,8 +164,8 @@ const Profile = () => {
           console.log("File type:", file.type);
           console.log("File size:", file.size, "bytes");
           
-          const response = await axios.patch(
-            `${API_URL}/users/me`,
+          const response = await axiosInstance.patch(
+            "users/me",
             { 
               resume: base64Resume, // Send the full data URL - Cloudinary will handle it
               full_name: user.full_name,
@@ -175,8 +173,7 @@ const Profile = () => {
               interests: user.interests || [],
               skills: user.skills || [],
               bio: user.bio || ""
-            },
-            { withCredentials: true }
+            }
           );
           console.log("Resume upload successful:", response.data);
           
@@ -198,9 +195,7 @@ const Profile = () => {
 
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`${API_URL}/users/me`, {
-          withCredentials: true,
-        });
+        const res = await axiosInstance.get("users/me");
         console.log(res);
         setProfile(res.data.user);
       } catch (error) {
@@ -217,8 +212,8 @@ const Profile = () => {
   // Fetch projects created count
   useEffect(() => {
     if (!user) return;
-    axios
-      .get(`${API_URL}/project/user-projects`, { withCredentials: true })
+    axiosInstance
+      .get("project/user-projects")
       .then((res) => {
         setProjectsCreated(
           Array.isArray(res.data.projects) ? res.data.projects.length : 0
@@ -230,8 +225,8 @@ const Profile = () => {
   // Fetch collaborations count (accepted only)
   useEffect(() => {
     if (!user) return;
-    axios
-      .get(`${API_URL}/project/memberships`, { withCredentials: true })
+    axiosInstance
+      .get("project/memberships")
       .then((res) => {
         console.log(res);
         const accepted = Array.isArray(res.data.accepted)

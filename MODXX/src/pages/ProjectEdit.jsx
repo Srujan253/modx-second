@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-import { API_URL } from "../api/axiosInstance";
+import axiosInstance, { BASE_URL } from "../api/axiosInstance";
 
 // Move InputField outside to prevent re-creation on every render
 const InputField = ({ 
@@ -435,9 +435,7 @@ const ProjectEdit = () => {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const res = await axios.get(`${API_URL}/project/${projectId}`, {
-          withCredentials: true,
-        });
+        const res = await axiosInstance.get(`project/${projectId}`);
         const project = res.data.project;
         if (project.leader_id !== user.id) {
           toast.error("Only the project leader can edit this project.");
@@ -453,7 +451,7 @@ const ProjectEdit = () => {
         setValue("techStack", project.tech_stack?.join(", "));
         setValue("maxMembers", project.max_members);
         setPreview(
-          project.project_image ? (project.project_image.startsWith('http') ? project.project_image : `${API_URL}${project.project_image}`) : null
+          project.project_image ? (project.project_image.startsWith('http') ? project.project_image : `${BASE_URL}${project.project_image.substring(1)}`) : null
         );
         setLoading(false);
       } catch (error) {
@@ -474,11 +472,10 @@ const ProjectEdit = () => {
       if (data.projectImage && data.projectImage[0]) {
         formData.set("projectImage", data.projectImage[0]);
       }
-      const response = await axios.put(
-        `${API_URL}/project/${projectId}`,
+      const response = await axiosInstance.put(
+        `project/${projectId}`,
         formData,
         {
-          withCredentials: true,
           headers: { "Content-Type": "multipart/form-data" },
         }
       );

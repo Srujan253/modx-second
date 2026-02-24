@@ -1,5 +1,5 @@
+const { getChatResponse: getAIResponse } = require("../aiHttpClient");
 const ErrorHandler = require("../utils/errorHandler");
-const { getChatbotResponse: getGrpcResponse } = require("../grpcClient"); // Import the gRPC client function
 
 exports.getChatbotResponse = async (req, res, next) => {
   try {
@@ -10,15 +10,13 @@ exports.getChatbotResponse = async (req, res, next) => {
       );
     }
 
-    // --- FORWARD THE REQUEST using gRPC ---
-    // Call the clean gRPC client function
-    const aiResponse = await getGrpcResponse(query);
+    // --- FORWARD THE REQUEST using HTTP ---
+    const answer = await getAIResponse(query);
 
     // Send the response from the Python service back to the user
-    // The response will be an object like { answer: '...' }
-    res.status(200).json(aiResponse);
+    res.status(200).json({ answer });
   } catch (error) {
-    console.error("Error communicating with the Python gRPC service:", error);
+    console.error("Error communicating with the Python AI service:", error);
     return next(
       new ErrorHandler(
         "The AI Mentor is currently unavailable. Please try again later.",

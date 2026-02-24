@@ -19,21 +19,29 @@ const port = process.env.PORT || 5000;
 
 // --- CORS SETUP ---
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim()) 
+  ? process.env.ALLOWED_ORIGINS.split(",").map(origin => origin.trim().replace(/\/+$/, "")) 
   : ["http://localhost:5173", "http://localhost:5000"]; 
+
+console.log("CORS: Allowed Origins:", allowedOrigins);
 
 const corsOptions = {
   origin: (origin, callback) => {
     // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes("*")) {
+    // Normalize origin for comparison (remove trailing slash)
+    const normalizedOrigin = origin.replace(/\/+$/, "");
+    
+    if (allowedOrigins.includes("*") || allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
+      console.warn(`CORS: Origin ${origin} (Normalized: ${normalizedOrigin}) not allowed. Allowed:`, allowedOrigins);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
 };
 app.use(cors(corsOptions));
 

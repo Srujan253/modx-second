@@ -14,12 +14,12 @@ import {
   Hash,
   Sparkles
 } from "lucide-react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { toast } from "react-toastify";
 
-import { API_URL } from "../api/axiosInstance";
+// (API_URL import moved up)
 
 const ProjectMessages = () => {
   const { projectId } = useParams();
@@ -38,13 +38,9 @@ const ProjectMessages = () => {
     const fetchMessages = async () => {
       try {
         console.log("🔍 Fetching messages for project:", projectId);
-        console.log("📡 API URL:", `${API_URL}/messages/${projectId}/messages`);
         
-        const { data } = await axios.get(
-          `${API_URL}/messages/${projectId}/messages`,
-          {
-            withCredentials: true,
-          }
+        const { data } = await axiosInstance.get(
+          `messages/${projectId}/messages`
         );
         
         console.log("✅ Messages response:", data);
@@ -66,11 +62,8 @@ const ProjectMessages = () => {
 
     const fetchProjectInfo = async () => {
       try {
-        const { data } = await axios.get(
-          `${API_URL}/project/${projectId}`,
-          {
-            withCredentials: true,
-          }
+        const { data } = await axiosInstance.get(
+          `project/${projectId}`
         );
         setProjectInfo(data.project);
       } catch (err) {

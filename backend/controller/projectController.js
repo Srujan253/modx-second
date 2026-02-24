@@ -1,7 +1,7 @@
 const Project = require("../models/Project");
 const ProjectMember = require("../models/ProjectMember");
 const User = require("../models/User");
-const { triggerIndexing, deleteProjectFromIndex } = require("../grpcClient");
+const { indexNewData: triggerIndexing, deleteProjectFromIndex } = require("../aiHttpClient");
 
 // Remove a member from a project (leader only)
 exports.removeMember = async (req, res) => {

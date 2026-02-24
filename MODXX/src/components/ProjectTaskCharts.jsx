@@ -45,7 +45,7 @@ const ProjectTaskCharts = ({ projectId, members }) => {
     const fetchTasks = async () => {
       setLoading(true);
       try {
-        const res = await axiosInstance.get(`/project/${projectId}/tasks`);
+        const res = await axiosInstance.get(`project/${projectId}/tasks`);
         setTasks(Array.isArray(res.data) ? res.data : res.data.tasks || []);
       } catch (err) {
         setTasks([]);
