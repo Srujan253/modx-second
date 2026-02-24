@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import apiClient from "../../api/axiosInstance"; // Use your central API client
 import { toast } from "react-toastify";
 import {
   Search,
@@ -13,7 +12,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import ProjectCard from "../../components/ProjectCard";
-
 import apiClient, { BASE_URL } from "../../api/axiosInstance";
 
 // Helper to get the image URL for a project
