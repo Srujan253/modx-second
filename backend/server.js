@@ -30,28 +30,30 @@ console.log("- ALLOWED_ORIGINS:", allowedOrigins);
 console.log("- MONGODB_URI:", process.env.MONGODB_URI ? "✔️ Configured" : "❌ Missing");
 console.log("- JWT_SECRET:", process.env.JWT_SECRET ? "✔️ Configured" : "❌ Missing");
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // If no origin (like mobile/curl), allow it
-    if (!origin) return callback(null, true);
-    
-    const normalizedOrigin = origin.replace(/\/+$/, "");
-    
-    // Check if origin is allowed
-    const isAllowed = allowedOrigins.includes("*") || allowedOrigins.includes(normalizedOrigin);
-    
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️ CORS Rejection: Origin "${origin}" is not in the allowed list.`);
-      // In production, we might want to be strict, but let's allow onrender.com subdomains for now to help debug
-      if (normalizedOrigin.endsWith(".onrender.com")) {
-        console.log(`💡 Auto-allowing onrender.com origin for debugging: ${normalizedOrigin}`);
-        return callback(null, true);
-      }
-      callback(null, false);
+const checkOrigin = (origin, callback) => {
+  // If no origin (like mobile/curl), allow it
+  if (!origin) return callback(null, true);
+  
+  const normalizedOrigin = origin.replace(/\/+$/, "");
+  
+  // Check if origin is allowed
+  const isAllowed = allowedOrigins.includes("*") || allowedOrigins.includes(normalizedOrigin);
+  
+  if (isAllowed) {
+    callback(null, true);
+  } else {
+    // In production, let's allow onrender.com subdomains automatically to prevent outages
+    if (normalizedOrigin.endsWith(".onrender.com")) {
+      console.log(`💡 Auto-allowing onrender.com origin: ${normalizedOrigin}`);
+      return callback(null, true);
     }
-  },
+    console.warn(`⚠️ CORS Rejection: Origin "${origin}" is not in the allowed list.`);
+    callback(null, false);
+  }
+};
+
+const corsOptions = {
+  origin: checkOrigin,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
@@ -112,7 +114,7 @@ const server = http.createServer(app);
 // --- SOCKET.IO SETUP ---
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: checkOrigin,
     credentials: true,
   },
 });

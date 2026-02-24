@@ -15,7 +15,7 @@ const sendToken = (user, statusCode, res, message) => {
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // Example: 1 day
     httpOnly: true, // IMPORTANT: Prevents JavaScript from accessing the cookie
     secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production
-    sameSite: "strict", // Helps prevent CSRF attacks
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "none" allows cross-origin on Render
   };
 
   res
