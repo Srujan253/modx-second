@@ -1,4 +1,5 @@
 import google.generativeai as genai
+import chromadb
 from core.config import (
     EMBEDDING_MODEL, 
     CHROMA_API_KEY, 
