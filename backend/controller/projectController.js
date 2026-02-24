@@ -192,7 +192,7 @@ exports.getPotentialMembers = async (req, res) => {
     const existingMembers = await ProjectMember.find({ projectId }).distinct("memberId");
     const users = await User.find({
       _id: { $ne: leaderId, $nin: existingMembers },
-    }).select("fullName email interest").lean();
+    }).select("fullName email interests skills").lean();
 
     const usersWithMapping = users.map(user => ({
       ...user,
@@ -213,8 +213,10 @@ exports.inviteMember = async (req, res) => {
   const { userId } = req.body;
   const leaderId = req.user.id;
   try {
+    console.log(`[INVITE] Attempting to invite user ${userId} to project ${projectId} by leader ${leaderId}`);
     const project = await Project.findById(projectId);
     if (!project || project.leaderId.toString() !== leaderId.toString()) {
+      console.warn(`[INVITE] Access Denied: Project ${!project ? 'Not Found' : 'Leader Mismatch'}`);
       return res
         .status(403)
         .json({ success: false, message: "Access denied." });
