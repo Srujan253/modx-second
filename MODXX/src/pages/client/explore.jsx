@@ -9,10 +9,16 @@ import {
   ArrowRight,
   Briefcase,
   Sparkles,
+  SearchX,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import ProjectCard from "../../components/ProjectCard";
 import apiClient, { BASE_URL } from "../../api/axiosInstance";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 // Helper to get the image URL for a project
 function getImageUrl(imagePath) {
@@ -135,32 +141,36 @@ const ExploreProjects = () => {
           {/* Search Form */}
           <form
             onSubmit={handleSearchSubmit}
-            className="flex flex-col md:flex-row items-center gap-4 mb-8 justify-center"
+            className="flex flex-col md:flex-row items-center gap-4 mb-12 justify-center"
           >
-            <div className="relative w-full md:w-2/3">
+            <div className="relative w-full md:w-2/3 group">
               <Search
-                size={20}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={18}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 group-focus-within:text-orange-500 transition-colors"
               />
-              <input
+              <Input
                 type="text"
                 placeholder="Use AI Search: 'beginner projects about healthcare'..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-800 text-white placeholder-gray-400 rounded-xl border border-gray-700/50 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all duration-300"
+                className="w-full pl-12 h-14 bg-gray-900/50 border-gray-800 rounded-2xl focus:ring-orange-500/20 focus:border-orange-500 transition-all text-base"
               />
             </div>
-            <button type="submit" className="btn btn-primary w-full md:w-auto">
-              Search
-            </button>
+            <Button 
+              type="submit" 
+              className="w-full md:w-auto h-14 px-8 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-[0_6px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none transition-all"
+            >
+              Execute Search
+            </Button>
             {isSearching && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={clearSearch}
-                className="btn btn-ghost w-full md:w-auto"
+                className="w-full md:w-auto h-14 text-gray-400 hover:text-white font-black uppercase tracking-widest"
               >
-                Clear Search
-              </button>
+                Clear
+              </Button>
             )}
           </form>
         </div>
@@ -169,39 +179,65 @@ const ExploreProjects = () => {
       {/* Results Section */}
       <div className="max-w-6xl mx-auto px-4">
         {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="bg-gray-900/50 border-gray-800 p-6 space-y-6">
+                <Skeleton className="w-full h-48 rounded-xl" />
+                <div className="space-y-4">
+                  <Skeleton className="h-8 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+                <div className="flex justify-between items-center pt-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-24" />
+                </div>
+              </Card>
+            ))}
           </div>
         ) : (
           <>
-            <div className="mb-8 p-4 bg-gray-800/50 border border-gray-700/50 rounded-lg flex items-center justify-between">
+            <div className="mb-8 p-6 bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl flex items-center justify-between shadow-2xl">
               <div className="flex items-center gap-3">
-                <Sparkles
-                  className={isSearching ? "text-blue-400" : "text-orange-400"}
-                />
-                <h2 className="text-xl font-semibold text-white">
+                <div className={cn(
+                  "p-2 rounded-lg",
+                  isSearching ? "bg-blue-500/10" : "bg-orange-500/10"
+                )}>
+                  <Sparkles
+                    className={isSearching ? "text-blue-400" : "text-orange-400"}
+                    size={20}
+                  />
+                </div>
+                <h2 className="text-xl font-black italic tracking-tighter text-white uppercase">
                   {isSearching
-                    ? `Search Results for "${searchTerm}"`
+                    ? `Results for "${searchTerm}"`
                     : "Recommended For You"}
                 </h2>
               </div>
               {!isSearching && projectsToDisplay.length > 3 && (
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => navigate('/explore/all')}
-                  className="flex items-center gap-2 text-orange-500 hover:text-orange-400 font-semibold transition-colors duration-300 hover:gap-3"
+                  className="text-orange-500 hover:text-orange-400 font-black uppercase tracking-widest text-xs"
                 >
-                  View All
-                  <ArrowRight size={18} />
-                </button>
+                  View All Deployment <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
               )}
             </div>
             {projectsToDisplay.length === 0 ? (
-              <div className="bg-gray-800 p-8 rounded-lg text-center mt-12">
-                <h3 className="text-3xl text-gray-400 mb-2">
-                  No projects found
+              <div className="bg-gray-900/50 border-2 border-dashed border-gray-800 p-16 rounded-[2.5rem] text-center mt-12">
+                <div className="bg-gray-800/50 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8 border-4 border-gray-700/50">
+                  <SearchX size={40} className="text-gray-600" />
+                </div>
+                <h3 className="text-3xl font-black italic tracking-tighter text-gray-400 mb-4 uppercase">
+                  No signals detected
                 </h3>
-                <p className="text-gray-500 text-lg">
-                  Try a different search or check back later.
+                <p className="text-gray-500 font-medium max-w-sm mx-auto">
+                   The requested sector returned no results. Try adjusting the frequency of your search parameters.
                 </p>
               </div>
             ) : (

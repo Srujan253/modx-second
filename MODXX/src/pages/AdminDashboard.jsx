@@ -12,9 +12,14 @@ import {
   User,
   ExternalLink,
   Target,
-  Loader2,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 // (Import moved up or handled by axiosInstance)
 
@@ -110,13 +115,8 @@ const AdminDashboard = () => {
     members: users.filter(u => u.role !== 'admin').length
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Loader2 className="animate-spin text-orange-500 w-12 h-12" />
-      </div>
-    );
-  }
+  // Stats are derived from users/projects, so they also depend on loading state
+  const isStatsLoading = loading && users.length === 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white p-4 sm:p-6 lg:p-8 pt-20">
@@ -151,10 +151,14 @@ const AdminDashboard = () => {
             >
               <div>
                 <p className="text-gray-400 text-xs font-black uppercase tracking-wider">{stat.label}</p>
-                <p className="text-3xl font-black mt-1">{stat.value}</p>
+                {isStatsLoading ? (
+                  <Skeleton className="h-9 w-12 mt-1" />
+                ) : (
+                  <p className="text-3xl font-black mt-1">{stat.value}</p>
+                )}
               </div>
-              <div className={`p-3 bg-${stat.color}-500/10 rounded-xl`}>
-                <stat.icon className={`text-${stat.color}-500 w-6 h-6`} />
+              <div className={cn("p-3 rounded-xl", `bg-${stat.color}-500/10`)}>
+                <stat.icon className={cn("w-6 h-6", `text-${stat.color}-500`)} />
               </div>
             </motion.div>
           ))}
@@ -210,7 +214,25 @@ const AdminDashboard = () => {
         {/* Table Content */}
         <div className="bg-gray-800/30 backdrop-blur-sm border-2 border-gray-700/30 rounded-2xl overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
-            {activeTab === "users" ? (
+            {loading ? (
+              <div className="p-8 space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-6 p-4 bg-gray-900/40 rounded-xl border border-gray-800">
+                    <Skeleton className="w-12 h-12 rounded-2xl" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                    <div className="flex gap-2">
+                      <Skeleton className="w-10 h-10 rounded-lg" />
+                      <Skeleton className="w-10 h-10 rounded-lg" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : activeTab === "users" ? (
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-800/50 text-gray-400 text-[10px] font-black uppercase tracking-[0.3em] border-b border-gray-700/50">
@@ -243,13 +265,13 @@ const AdminDashboard = () => {
                         </td>
                         <td className="px-6 py-4">
                           {u.role === 'admin' ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase border border-orange-500/20 tracking-widest">
-                              <Shield size={10} /> Admin Access
-                            </span>
+                            <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">
+                              <Shield size={10} className="mr-1.5" /> Admin Access
+                            </Badge>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-700/50 text-gray-400 text-[10px] font-black uppercase border border-gray-600/30 tracking-widest">
+                            <Badge variant="outline" className="bg-gray-700/50 text-gray-400 border-gray-600/30 font-black uppercase text-[10px] tracking-widest px-3 py-1">
                               Standard User
-                            </span>
+                            </Badge>
                           )}
                         </td>
                         <td className="px-6 py-4">
@@ -261,26 +283,30 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             {u.role !== 'admin' && (
-                              <button
+                              <Button
+                                size="icon"
+                                variant="outline"
                                 onClick={() => handlePromote(u._id)}
-                                className="p-2.5 bg-blue-500/5 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 rounded-xl transition-all"
+                                className="bg-blue-500/5 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 border-transparent hover:border-blue-500/20"
                                 title="Promote to Admin"
                               >
                                 <UserPlus size={18} />
-                              </button>
+                              </Button>
                             )}
                             {u._id !== currentUser.id && (
-                              <button
+                              <Button
+                                size="icon"
+                                variant="outline"
                                 onClick={() => {
                                   setItemToDelete(u);
                                   setDeleteType("user");
                                   setIsDeleteModalOpen(true);
                                 }}
-                                className="p-2.5 bg-red-500/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 rounded-xl transition-all"
+                                className="bg-red-500/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border-transparent hover:border-red-500/20"
                                 title="Delete User"
                               >
                                 <Trash2 size={18} />
-                              </button>
+                              </Button>
                             )}
                           </div>
                         </td>
@@ -332,24 +358,28 @@ const AdminDashboard = () => {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <button
+                            <Button
+                              size="icon"
+                              variant="outline"
                               onClick={() => window.open(`/project/${p._id}`, '_blank')}
-                              className="p-2.5 bg-orange-500/5 text-gray-400 hover:text-orange-500 hover:bg-orange-500/10 border border-transparent hover:border-orange-500/20 rounded-xl transition-all"
+                              className="bg-orange-500/5 text-gray-400 hover:text-orange-500 hover:bg-orange-500/10 border-transparent hover:border-orange-500/20"
                               title="View Project"
                             >
                               <ExternalLink size={18} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
                               onClick={() => {
                                 setItemToDelete(p);
                                 setDeleteType("project");
                                 setIsDeleteModalOpen(true);
                               }}
-                              className="p-2.5 bg-red-500/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 rounded-xl transition-all"
+                              className="bg-red-500/5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 border-transparent hover:border-red-500/20"
                               title="Delete Project"
                             >
                               <Trash2 size={18} />
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </motion.tr>
@@ -397,18 +427,19 @@ const AdminDashboard = () => {
                 Warning: You are initiating the permanent deletion of <span className="text-white font-black italic">{deleteType === "user" ? itemToDelete?.fullName : itemToDelete?.title}</span>. This protocol is irreversible.
               </p>
               <div className="flex gap-4">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setIsDeleteModalOpen(false)}
-                  className="flex-1 py-4 px-6 rounded-2xl bg-gray-800 text-gray-400 font-black hover:bg-gray-700 hover:text-white transition-all uppercase tracking-[0.2em] text-[10px] border-2 border-transparent hover:border-gray-600"
+                  className="flex-1 h-12 bg-gray-800 text-gray-400 font-black hover:bg-gray-700 hover:text-white uppercase tracking-[0.2em] text-[10px] border-2 border-transparent hover:border-gray-600"
                 >
                   Abort Protocol
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleDelete}
-                  className="flex-1 py-4 px-6 rounded-2xl bg-red-600 text-white font-black hover:bg-red-700 transition-all uppercase tracking-[0.2em] text-[10px] shadow-[0_6px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none"
+                  className="flex-1 h-12 bg-red-600 text-white font-black hover:bg-red-700 uppercase tracking-[0.2em] text-[10px] shadow-[0_6px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none"
                 >
                   Confirm Erasure
-                </button>
+                </Button>
               </div>
             </motion.div>
           </div>

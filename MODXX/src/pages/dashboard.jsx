@@ -15,11 +15,17 @@ import {
   Calendar,
   Settings,
   Eye,
-  Bell,
-  Filter,
   Grid3X3,
-  List
+  List,
+  Target,
+  Bell,
+  Filter
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import EmptyState from "../components/EmptyState";
 
 
 const Dashboard = () => {
@@ -30,11 +36,13 @@ const Dashboard = () => {
   const [invites, setInvites] = useState([]); // Project invites for this user
   const [viewMode, setViewMode] = useState('grid'); // grid or list
   const [activeTab, setActiveTab] = useState('my-projects'); // my-projects, selected, pending
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   // Fetch all dashboard data
   const fetchAll = async () => {
     try {
+      setLoading(true);
       // 1. Projects created by user
       const { data: myProjects } = await axiosInstance.get("project/user-projects");
       setProjects(myProjects.projects);
@@ -51,6 +59,8 @@ const Dashboard = () => {
       toast.error(
         error.response?.data?.message || "Failed to fetch dashboard data."
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,169 +101,165 @@ const Dashboard = () => {
   const ProjectCard = ({ project, type, isListView = false }) => (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`bg-gray-800/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-700/50 hover:border-orange-500/30 group ${
-        isListView ? 'flex flex-col sm:flex-row items-start sm:items-center' : ''
-      }`}
-      whileHover={{ y: -4, scale: 1.02 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      className="group"
     >
-      <img
-        src={
-          project.project_image
-            ? project.project_image.startsWith("http")
-              ? project.project_image
-              : `${BASE_URL}${project.project_image.startsWith("/") ? project.project_image.substring(1) : project.project_image}`
-            : "https://placehold.co/600x400/1f2937/d1d5db?text=Project+Image"
-        }
-        alt={project.title}
-        className={`${
-          isListView 
-            ? 'w-full sm:w-48 h-32 sm:h-32' 
-            : 'w-full h-32 sm:h-40 lg:h-48'
-        } object-cover group-hover:scale-105 transition-transform duration-300`}
-      />
-      <div className={`p-3 sm:p-4 lg:p-6 ${isListView ? 'flex-1' : ''}`}>
-        <div className="flex items-start justify-between mb-2 sm:mb-3">
-          <h3 className={`text-base sm:text-lg lg:text-xl font-bold ${
-            type === 'my-projects' ? 'text-orange-400' :
-            type === 'selected' ? 'text-green-400' : 'text-yellow-400'
-          } group-hover:text-white transition-colors duration-200 line-clamp-1`}>
-            {project.title}
-          </h3>
-          {type === 'pending' && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-700/50 text-yellow-200 rounded-full text-xs font-semibold border border-yellow-600/30 ml-2 flex-shrink-0">
-              <Clock size={10} className="sm:hidden" />
-              <Clock size={12} className="hidden sm:block" />
-              <span className="hidden sm:inline">Pending</span>
-            </span>
-          )}
+      <Card className={`overflow-hidden border-gray-800 bg-gray-900/50 backdrop-blur-xl hover:border-orange-500/50 transition-all duration-300 shadow-2xl ${
+        isListView ? 'flex flex-col sm:flex-row' : ''
+      }`}>
+        <div className={`relative ${isListView ? 'w-full sm:w-64 h-48 sm:h-auto' : 'h-48'} overflow-hidden`}>
+          <img
+            src={
+              project.project_image
+                ? project.project_image.startsWith("http")
+                  ? project.project_image
+                  : `${BASE_URL}${project.project_image.startsWith("/") ? project.project_image.substring(1) : project.project_image}`
+                : "https://placehold.co/600x400/1f2937/d1d5db?text=Project+Image"
+            }
+            alt={project.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 to-transparent opacity-60" />
         </div>
-        <p className="text-gray-300 mb-3 sm:mb-4 line-clamp-2 text-sm sm:text-base">
-          {project.description}
-        </p>
         
-        <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-4 text-xs sm:text-sm">
-          <div className="flex items-center gap-1 sm:gap-2 text-gray-400">
-            <Star size={14} className="sm:hidden text-yellow-400" />
-            <Star size={16} className="hidden sm:block text-yellow-400" />
-            <span>{project.avg_rating || "N/A"}</span>
+        <CardContent className={`p-6 flex flex-col ${isListView ? 'flex-1' : ''}`}>
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors truncate pr-4">
+              {project.title}
+            </h3>
+            {type === 'pending' && (
+              <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 font-black uppercase text-[10px] tracking-widest">
+                <Clock className="w-3 h-3 mr-1" /> Pending
+              </Badge>
+            )}
           </div>
-          {project.created_at && (
-            <div className="flex items-center gap-1 sm:gap-2 text-gray-400">
-              <Calendar size={14} className="sm:hidden" />
-              <Calendar size={16} className="hidden sm:block" />
-              <span className="hidden sm:inline">{new Date(project.created_at).toLocaleDateString()}</span>
-              <span className="sm:hidden">{new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+
+          <p className="text-gray-400 text-sm font-medium line-clamp-2 mb-6 leading-relaxed">
+            {project.description}
+          </p>
+
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-1.5 bg-gray-800/50 px-2 py-1 rounded-lg border border-gray-700/50">
+              <Star className="w-4 h-4 text-yellow-500" />
+              <span className="text-xs font-black text-gray-300">{project.avg_rating || "0.0"}</span>
             </div>
-          )}
-        </div>
+            {project.created_at && (
+              <div className="flex items-center gap-1.5 text-gray-500 text-xs font-bold font-mono">
+                <Calendar className="w-4 h-4" />
+                <span>{new Date(project.created_at).toLocaleDateString()}</span>
+              </div>
+            )}
+          </div>
 
-        <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-          {(Array.isArray(project.tech_stack)
-            ? project.tech_stack
-            : String(project.tech_stack || "")
-                .split(",")
-                .map((t) => t.trim())
-                .filter(Boolean)
-          ).slice(0, isListView ? 2 : 3).map((tag, index) => (
-            <span
-              key={index}
-              className="bg-gray-700/70 text-gray-300 text-xs font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-gray-600/50 hover:bg-gray-600/70 transition-colors"
-            >
-              {tag}
-            </span>
-          ))}
-          {(Array.isArray(project.tech_stack) ? project.tech_stack : String(project.tech_stack || "").split(",")).length > (isListView ? 2 : 3) && (
-            <span className="text-xs text-gray-400 px-2 py-0.5 sm:py-1">
-              +{(Array.isArray(project.tech_stack) ? project.tech_stack : String(project.tech_stack || "").split(",")).length - (isListView ? 2 : 3)} more
-            </span>
-          )}
-        </div>
+          <div className="flex flex-wrap gap-2 mb-8">
+            {(Array.isArray(project.tech_stack)
+              ? project.tech_stack
+              : String(project.tech_stack || "").split(",").map(t => t.trim()).filter(Boolean)
+            ).slice(0, 3).map((tag, idx) => (
+              <Badge key={idx} variant="outline" className="bg-gray-800/30 border-gray-700/50 text-gray-400 font-bold hover:border-orange-500/30">
+                {tag}
+              </Badge>
+            ))}
+          </div>
 
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <Link
-            to={`/project/${project.id}`}
-            className={`inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 text-xs sm:text-sm ${
-              type === 'my-projects' 
-                ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border border-orange-500/30' :
-              type === 'selected' 
-                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30' : 
-                'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/30'
-            }`}
-          >
-            <Eye size={14} className="sm:hidden" />
-            <Eye size={16} className="hidden sm:block" />
-            <span className="hidden sm:inline">View Details</span>
-            <span className="sm:hidden">View</span>
-          </Link>
-          {type === 'my-projects' && (
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-1.5 sm:p-2 text-gray-400 hover:text-orange-400 transition-colors"
+          <div className="mt-auto flex items-center justify-between">
+            <Button
+              asChild
+              variant="outline"
+              className="border-orange-500/20 hover:border-orange-500/50 hover:bg-orange-500/10 text-orange-500 font-black uppercase tracking-widest text-[10px] px-6"
             >
-              <Settings size={14} className="sm:hidden" />
-              <Settings size={16} className="hidden sm:block" />
-            </motion.button>
-          )}
-        </div>
-      </div>
+              <Link to={`/project/${project.id}`}>
+                <Eye className="w-4 h-4 mr-2" /> View Operations
+              </Link>
+            </Button>
+            
+            {type === 'my-projects' && (
+              <Button size="icon" variant="ghost" className="text-gray-500 hover:text-orange-500 transition-colors">
+                <Settings className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 
   const InviteCard = ({ invite, isListView = false }) => (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
-      className={`bg-gray-800/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-gray-700/50 hover:border-orange-500/30 transition-all duration-300 shadow-lg ${
-        isListView ? 'flex flex-col sm:flex-row items-start sm:items-center gap-4' : ''
-      }`}
+      transition={{ duration: 0.2 }}
     >
-      <div className="flex items-start gap-4 flex-1">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-          <User size={20} className="text-orange-400" />
+      <Card className={`border-orange-500/20 bg-gray-900/50 backdrop-blur-xl p-6 hover:border-orange-500/40 transition-all ${
+        isListView ? 'flex flex-col sm:flex-row items-center gap-6' : ''
+      }`}>
+        <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center flex-shrink-0 border-2 border-orange-500/20">
+          <Target className="text-orange-500 w-6 h-6" />
         </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="text-lg sm:text-xl font-bold text-orange-400 truncate mb-1">
+        <div className="flex-1 mt-4 sm:mt-0">
+          <Badge variant="outline" className="mb-2 bg-orange-500/5 text-orange-500 border-orange-500/20 font-black uppercase text-[10px] tracking-widest">
+            New Invitation
+          </Badge>
+          <h4 className="text-2xl font-black italic tracking-tighter text-white mb-2">
             {invite.project_title}
           </h4>
-          <p className="text-gray-300 text-sm sm:text-base mb-4">
-            You've been invited by <span className="font-semibold text-white">{invite.leader_name}</span> to join this project.
+          <p className="text-gray-400 text-sm font-medium mb-6">
+            Command authorization requested by <span className="text-orange-500 font-black italic">{invite.leader_name}</span>. Join the operation?
           </p>
           
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg font-bold transition-all border border-green-500/30 flex items-center justify-center gap-2 text-sm sm:text-base"
+          <div className="flex gap-4">
+            <Button
               onClick={() => handleAcceptInvite(invite.id, invite.project_id)}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-xs h-11"
             >
-              <CheckCircle size={18} />
-              Accept
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-bold transition-all border border-red-500/30 flex items-center justify-center text-sm sm:text-base"
+              <CheckCircle className="w-4 h-4 mr-2" /> Accept
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => handleRejectInvite(invite.id, invite.project_id)}
+              className="flex-1 border-gray-800 hover:bg-gray-800 text-gray-400 font-black uppercase tracking-widest text-xs h-11"
             >
               Reject
-            </motion.button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
     </motion.div>
   );
 
   const renderProjects = () => {
-    let emptyConfig = {};
+    if (loading) {
+      const isListView = viewMode === 'list';
+      return (
+        <div className={
+          viewMode === 'grid' 
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6' 
+            : 'flex flex-col gap-4'
+        }>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className={`bg-gray-900/50 rounded-2xl p-6 border border-gray-800 ${isListView ? 'flex gap-6' : ''}`}>
+              <Skeleton className={`${isListView ? 'w-64 h-48' : 'w-full h-48'} rounded-xl mb-6`} />
+              <div className="flex-1">
+                <Skeleton className="w-3/4 h-8 mb-4" />
+                <Skeleton className="w-full h-4 mb-2" />
+                <Skeleton className="w-2/3 h-4 mb-6" />
+                <div className="flex gap-2">
+                  <Skeleton className="w-20 h-6" />
+                  <Skeleton className="w-20 h-6" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
 
+    let emptyConfig = {};
     switch (activeTab) {
       case 'my-projects':
         emptyConfig = {
@@ -346,53 +352,43 @@ const Dashboard = () => {
                 </h1>
                 <p className="text-gray-400 text-sm sm:text-base">Manage your projects and collaborations</p>
               </div>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full sm:w-auto"
-              >
-                <Link
-                  to="/project/create"
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base w-full sm:w-auto"
+              <div className="w-full sm:w-auto">
+                <Button 
+                  asChild
+                  className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-[0.2em] py-6 px-8 rounded-2xl shadow-[0_8px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none transition-all"
                 >
-                  <Plus size={18} className="sm:hidden" />
-                  <Plus size={20} className="hidden sm:block" />
-                  <span className="sm:inline">Create New Project</span>
-                  <span className="sm:hidden">Create Project</span>
-                </Link>
-              </motion.div>
+                  <Link to="/project/create">
+                    <Plus className="w-5 h-5 mr-1" /> Create Operation
+                  </Link>
+                </Button>
+              </div>
             </motion.div>
 
             {/* Navigation Tabs */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-              <div className="flex bg-gray-800/50 rounded-xl p-1 backdrop-blur-sm border border-gray-700/50 w-full sm:w-auto overflow-x-auto">
+              <div className="flex bg-gray-900/80 rounded-2xl p-1.5 border border-gray-800 backdrop-blur-3xl w-full sm:w-auto overflow-x-auto shadow-2xl">
                 {[
-                  { id: 'my-projects', label: 'My Projects', shortLabel: 'My', count: projects.length },
-                  { id: 'selected', label: 'Joined Projects', shortLabel: 'Joined', count: selectedProjects.length },
-                  { id: 'pending', label: 'Pending', shortLabel: 'Pending', count: pendingRequests.length },
-                  { id: 'invites', label: 'Invitations', shortLabel: 'Invites', count: invites.length }
+                  { id: 'my-projects', label: 'My Projects', count: projects.length },
+                  { id: 'selected', label: 'Joined', count: selectedProjects.length },
+                  { id: 'pending', label: 'Applied', count: pendingRequests.length },
+                  { id: 'invites', label: 'Invites', count: invites.length }
                 ].map((tab) => (
-                  <motion.button
+                  <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-3 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-sm sm:text-base ${
+                    className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
                       activeTab === tab.id
-                        ? 'bg-orange-500 text-white shadow-lg'
-                        : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                        ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
+                        : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                     }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
-                    <span className="sm:hidden">{tab.shortLabel}</span>
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    {tab.label}
                     {tab.count > 0 && (
-                      <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs ${
-                        activeTab === tab.id ? 'bg-white/20' : 'bg-gray-600'
-                      }`}>
+                      <Badge variant={activeTab === tab.id ? "default" : "secondary"} className={`rounded-md text-[9px] ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-800 text-gray-500'}`}>
                         {tab.count}
-                      </span>
+                      </Badge>
                     )}
-                  </motion.button>
+                  </button>
                 ))}
               </div>
 

@@ -24,6 +24,11 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Modal from "../components/Modal";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const ProjectTask = () => {
   // Remove member handler (for leader)
@@ -103,44 +108,53 @@ const ProjectTask = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative mb-8">
-            <div className="w-16 h-16 border-4 border-gray-700 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute inset-0 w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <div
-              className="absolute inset-2 w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"
-              style={{ animationDirection: "reverse" }}
-            ></div>
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-10 h-10 rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+            </div>
+            <Skeleton className="w-32 h-10 rounded-xl" />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">
-            Loading Project Tasks
-          </h3>
-          <p className="text-gray-400">Preparing your workspace...</p>
+          <Skeleton className="w-64 h-12 rounded-xl" />
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="w-full h-[60vh] rounded-2xl" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="w-full h-64 rounded-2xl" />
+              <Skeleton className="w-full h-32 rounded-2xl" />
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  const getRoleIcon = (role) => {
+  const getRoleBadge = (role) => {
     switch (role) {
       case "leader":
-        return Crown;
+        return (
+          <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">
+            <Crown size={10} className="mr-1.5" /> Core Leader
+          </Badge>
+        );
       case "mentor":
-        return Shield;
+        return (
+          <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">
+            <Shield size={10} className="mr-1.5" /> Project Mentor
+          </Badge>
+        );
       default:
-        return User;
-    }
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "leader":
-        return "text-yellow-400";
-      case "mentor":
-        return "text-blue-400";
-      default:
-        return "text-green-400";
+        return (
+          <Badge variant="outline" className="bg-gray-800/50 text-gray-400 border-gray-700/50 font-black uppercase text-[10px] tracking-widest px-3 py-1">
+            <User size={10} className="mr-1.5" /> Unit Member
+          </Badge>
+        );
     }
   };
 
@@ -153,61 +167,54 @@ const ProjectTask = () => {
         <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-purple-500/3 rounded-full blur-2xl animate-pulse delay-2000"></div>
       </div>
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 border-b border-gray-700/50 bg-gray-800/50 backdrop-blur-sm"
-      >
-        <div className="max-w-7xl mx-auto px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                to={`/project/${projectId}`}
-                className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-orange-400 transition-all duration-200"
+      <div className="relative z-10 border-b border-gray-800 bg-gray-900/50 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-8 py-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <Button
+                asChild
+                variant="outline"
+                size="icon"
+                className="w-12 h-12 rounded-2xl bg-gray-800 border-gray-700 hover:border-orange-500/50 group"
               >
-                <ArrowLeft size={20} />
-              </Link>
+                <Link to={`/project/${projectId}`}>
+                  <ArrowLeft size={20} className="text-gray-400 group-hover:text-orange-500 transition-colors" />
+                </Link>
+              </Button>
               <div>
-                <h1 className="text-2xl font-bold text-white">Project Tasks</h1>
-                <p className="text-gray-400">
-                  Manage and track project progress
+                <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">MISSION CONTROL</h1>
+                <p className="text-gray-500 font-bold text-xs tracking-widest uppercase">
+                  PROJECT ID: {projectId?.substring(0, 8) || "UNKNOWN"} // STATUS: OPERATIONAL
                 </p>
               </div>
             </div>
-            {/* You can add header actions here if needed */}
-          </div>
-          {/* View Toggle */}
-          <div className="flex bg-gray-800/80 rounded-xl p-1 border border-gray-600/50 mt-6">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setActiveView("tasks")}
-              className={`px-4 py-2 rounded-lg transition-all font-medium ${
-                activeView === "tasks"
-                  ? "bg-orange-500 text-white shadow-lg"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <Target size={16} className="mr-2 inline" />
-              Tasks
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setActiveView("overview")}
-              className={`px-4 py-2 rounded-lg transition-all font-medium ${
-                activeView === "overview"
-                  ? "bg-orange-500 text-white shadow-lg"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <Users size={16} className="mr-2 inline" />
-              Overview
-            </motion.button>
+            
+            {/* View Toggle */}
+            <div className="flex bg-gray-950 p-1.5 rounded-2xl border border-gray-800 shadow-inner">
+              <Button
+                onClick={() => setActiveView("tasks")}
+                variant={activeView === "tasks" ? "default" : "ghost"}
+                className={cn(
+                  "h-10 px-6 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all",
+                  activeView === "tasks" ? "bg-orange-500 text-white shadow-[0_4px_0_rgb(153,27,27)]" : "text-gray-500 hover:text-white"
+                )}
+              >
+                <Target size={14} className="mr-2" /> Task Grid
+              </Button>
+              <Button
+                onClick={() => setActiveView("overview")}
+                variant={activeView === "overview" ? "default" : "ghost"}
+                className={cn(
+                  "h-10 px-6 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all",
+                  activeView === "overview" ? "bg-orange-500 text-white shadow-[0_4px_0_rgb(153,27,27)]" : "text-gray-500 hover:text-white"
+                )}
+              >
+                <Users size={14} className="mr-2" /> Unit Overview
+              </Button>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-8">
         <AnimatePresence mode="wait">
@@ -227,43 +234,27 @@ const ProjectTask = () => {
                 transition={{ delay: 0.1 }}
                 className="lg:col-span-2"
               >
-                <div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
-                  {/* Panel Header */}
-                  <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 p-6 border-b border-gray-700/50">
+                <Card className="bg-gray-900 border-gray-800 shadow-2xl overflow-hidden">
+                  <CardHeader className="bg-orange-500/5 border-b border-gray-800 p-8">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-orange-500/20 rounded-lg">
-                          <Settings className="text-orange-400 w-5 h-5" />
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
+                          <Settings className="text-orange-500 w-6 h-6" />
                         </div>
                         <div>
-                          <h2 className="text-xl font-bold text-white">
-                            Task Management
-                          </h2>
-                          <p className="text-gray-400 text-sm">
-                            {isLeaderOrMentor
-                              ? "Assign and manage all tasks"
-                              : "View project tasks"}
+                          <CardTitle className="text-2xl font-black italic tracking-tighter text-white uppercase">
+                            COMMAND INTERFACE
+                          </CardTitle>
+                          <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
+                            {isLeaderOrMentor ? "System Authorization Enabled" : "Read-Only Terminal"}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getRoleIcon(myRole) && (
-                          <div
-                            className={`flex items-center gap-1 px-3 py-1 rounded-full bg-gray-700/50 ${getRoleColor(
-                              myRole
-                            )}`}
-                          >
-                            {React.createElement(getRoleIcon(myRole), {
-                              size: 14,
-                            })}
-                            <span className="text-sm font-medium capitalize">
-                              {myRole || "Member"}
-                            </span>
-                          </div>
-                        )}
+                        {getRoleBadge(myRole)}
                       </div>
                     </div>
-                  </div>
+                  </CardHeader>
 
                   {/* Task Content */}
                   <div className="p-6">
@@ -276,7 +267,7 @@ const ProjectTask = () => {
                       onDeleteTask={handleDeleteTask}
                     />
                   </div>
-                </div>
+                </Card>
               </motion.div>
 
               {/* My Tasks Sidebar */}
@@ -287,46 +278,43 @@ const ProjectTask = () => {
                 className="space-y-6"
               >
                 {/* My Tasks Panel */}
-                <div className="bg-gray-800/90 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden">
-                  <div className="bg-gradient-to-r from-green-500/10 to-green-600/10 p-4 border-b border-gray-700/50">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 bg-green-500/20 rounded-lg">
-                        <UserCheck className="text-green-400 w-4 h-4" />
+                <Card className="bg-gray-900 border-gray-800 shadow-2xl overflow-hidden">
+                  <CardHeader className="bg-green-500/5 border-b border-gray-800 p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-500/10 rounded-xl border border-green-500/20">
+                        <UserCheck className="text-green-500 w-4 h-4" />
                       </div>
-                      <h3 className="text-lg font-bold text-white">My Tasks</h3>
+                      <CardTitle className="text-sm font-black uppercase tracking-widest text-white italic">MY DEPLOYMENTS</CardTitle>
                     </div>
-                  </div>
-                  <div className="p-4 max-h-96 overflow-y-auto">
+                  </CardHeader>
+                  <CardContent className="p-4 max-h-96 overflow-y-auto">
                     <MyTaskPanel projectId={projectId} />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
                 {/* Quick Stats */}
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-gray-800/90 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-6 shadow-2xl"
-                >
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="text-blue-400 w-5 h-5" />
-                    <h3 className="text-lg font-bold text-white">
-                      Quick Stats
-                    </h3>
+                <Card className="bg-gray-900 border-gray-800 p-6 shadow-2xl group border-2 border-transparent hover:border-orange-500/20 transition-all duration-500">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-orange-500/10 rounded-xl">
+                      <Activity className="text-orange-500 w-5 h-5" />
+                    </div>
+                    <CardTitle className="text-sm font-black uppercase tracking-widest text-white italic">TELEMETRY</CardTitle>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-gray-700/30 rounded-xl">
-                      <div className="text-2xl font-bold text-orange-400">
+                    <div className="text-center p-4 bg-gray-800/50 rounded-2xl border border-gray-700/30">
+                      <div className="text-3xl font-black italic tracking-tighter text-orange-500">
                         {members.length}
                       </div>
-                      <div className="text-xs text-gray-400">Team Size</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">UNITS</div>
                     </div>
-                    <div className="text-center p-3 bg-gray-700/30 rounded-xl">
-                      <div className="text-2xl font-bold text-green-400">
-                        {members.filter((m) => m.role === "leader").length}
+                    <div className="text-center p-4 bg-gray-800/50 rounded-2xl border border-gray-700/30">
+                      <div className="text-3xl font-black italic tracking-tighter text-blue-500">
+                        {members.filter((m) => m.role === "mentor").length}
                       </div>
-                      <div className="text-xs text-gray-400">Leaders</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">MASTERS</div>
                     </div>
                   </div>
-                </motion.div>
+                </Card>
               </motion.div>
             </motion.div>
           ) : (
@@ -338,106 +326,85 @@ const ProjectTask = () => {
               transition={{ duration: 0.3 }}
             >
               {/* Team Overview */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-800/90 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden"
-              >
-                <div className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 p-6 border-b border-gray-700/50">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <Users className="text-blue-400 w-6 h-6" />
+              <Card className="bg-gray-900 border-gray-800 shadow-2xl overflow-hidden">
+                <CardHeader className="bg-blue-500/5 border-b border-gray-800 p-8">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 text-blue-500">
+                      <Users size={24} />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-white">
-                        Team Overview
-                      </h2>
-                      <p className="text-gray-400">
-                        Meet your project collaborators
+                      <CardTitle className="text-2xl font-black italic tracking-tighter text-white uppercase">
+                        UNIT DIRECTORY
+                      </CardTitle>
+                      <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
+                        Active Personnel Status and Telemetry
                       </p>
                     </div>
                   </div>
-                </div>
+                </CardHeader>
 
-                <div className="p-6">
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {members.map((member, index) => {
-                      const RoleIcon = getRoleIcon(member.role);
-                      return (
-                        <motion.div
-                          key={member.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ scale: 1.05, y: -5 }}
-                          className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-6 border border-gray-600/30 hover:border-orange-500/30 transition-all duration-300 group"
-                        >
-                          {/* Member Avatar */}
-                          <div className="flex flex-col items-center text-center">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center mb-4 shadow-lg group-hover:shadow-orange-500/25 transition-shadow">
-                              <span className="text-white font-bold text-lg">
+                <CardContent className="p-8">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    {members.map((member, index) => (
+                      <Card
+                        key={member.id}
+                        className="bg-gray-800/30 border-gray-700/50 hover:border-orange-500/30 transition-all duration-500 group relative overflow-hidden"
+                      >
+                        <CardContent className="p-6">
+                           {/* Member Avatar */}
+                           <div className="flex flex-col items-center text-center">
+                            <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-br from-gray-800 to-gray-950 flex items-center justify-center mb-4 border-2 border-gray-700 group-hover:border-orange-500 transition-all duration-500 relative">
+                              <span className="text-white font-black italic tracking-tighter text-2xl uppercase">
                                 {member.full_name?.charAt(0) || "U"}
                               </span>
+                              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-gray-900" />
                             </div>
 
-                            <h3 className="text-lg font-bold text-white mb-1 group-hover:text-orange-400 transition-colors">
-                              {member.full_name || "Unknown User"}
+                            <h3 className="text-lg font-black italic tracking-tighter text-white uppercase mb-2 group-hover:text-orange-500 transition-colors">
+                              {member.full_name || "Unknown Unit"}
                             </h3>
-                            {/* Remove button for leader, not for leader member */}
+                            
+                            <div className="mb-4">
+                              {getRoleBadge(member.role)}
+                            </div>
+
+                            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-6 truncate w-full">
+                              {member.email}
+                            </p>
+
                             {isLeaderOrMentor && myRole === "leader" && member.role !== "leader" && (
-                              <button
-                                className="mt-2 px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-semibold"
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full bg-red-500/5 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-[9px] h-8"
                                 onClick={() => triggerRemoveMember(member.id)}
                               >
-                                Remove
-                              </button>
-                            )}
-
-                            <div
-                              className={`flex items-center gap-1 px-3 py-1 rounded-full bg-gray-800/50 ${getRoleColor(
-                                member.role
-                              )} mb-3`}
-                            >
-                              <RoleIcon size={12} />
-                              <span className="text-xs font-medium capitalize">
-                                {member.role || "Member"}
-                              </span>
-                            </div>
-
-                            {member.email && (
-                              <p className="text-gray-400 text-sm truncate w-full">
-                                {member.email}
-                              </p>
+                                Terminate Access
+                              </Button>
                             )}
                           </div>
-
-                          {/* Member Status Indicator */}
-                          <div className="mt-4 pt-4 border-t border-gray-600/30">
-                            <div className="flex items-center justify-center gap-2 text-green-400">
-                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                              <span className="text-xs">Active</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
 
                   {members.length === 0 && (
-                    <div className="text-center py-12">
-                      <Users size={48} className="text-gray-500 mx-auto mb-4" />
-                      <h3 className="text-xl font-bold text-gray-400 mb-2">
-                        No team members found
+                    <div className="text-center py-24 bg-gray-950/50 rounded-[3rem] border-2 border-dashed border-gray-800">
+                      <Users size={48} className="text-gray-700 mx-auto mb-6" />
+                      <h3 className="text-2xl font-black italic tracking-tighter text-gray-500 mb-2 uppercase">
+                        Zero Units Detected
                       </h3>
-                      <p className="text-gray-500">
-                        This project doesn't have any members yet.
+                      <p className="text-gray-600 font-medium">
+                        Deployment matrix is currently vacant.
                       </p>
                     </div>
                   )}
-                  {/* Task Analytics Charts & Table - moved here for correct placement */}
-                  <ProjectTaskCharts projectId={projectId} members={members} />
-                </div>
-              </motion.div>
+                  
+                  <div className="pt-8 border-t border-gray-800">
+                    <ProjectTaskCharts projectId={projectId} members={members} />
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
         </AnimatePresence>

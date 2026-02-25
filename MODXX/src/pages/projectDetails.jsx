@@ -3,11 +3,26 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Star, User, Users } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
 import MyTaskPanel from "../components/MyTaskPanel";
 import RelatedProjects from "../components/RelatedProjects";
 import Modal from "../components/Modal";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  CheckCircle, 
+  XCircle, 
+  ArrowRight, 
+  Settings, 
+  Trash2, 
+  Edit, 
+  Layout, 
+  Calendar,
+  Clock,
+  ExternalLink,
+  Target
+} from "lucide-react";
 
 import axiosInstance, { BASE_URL } from "../api/axiosInstance";
 
@@ -64,28 +79,31 @@ const ProjectDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <svg
-          className="animate-spin h-10 w-10 text-orange-500"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        <p className="mt-4 text-lg">Loading project...</p>
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div className="flex flex-col md:flex-row gap-8 max-w-7xl mx-auto">
+          {/* Sidebar Skeleton */}
+          <div className="hidden md:block w-64 space-y-4">
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
+          </div>
+          
+          {/* Main Content Skeleton */}
+          <div className="flex-1 space-y-8">
+            <Skeleton className="w-full h-80 rounded-2xl" />
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-3/4" />
+              <div className="flex gap-4">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-6 w-28" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -131,76 +149,75 @@ const ProjectDetails = () => {
     <div className="min-h-screen bg-gray-900 text-white p-8 flex flex-col md:flex-row gap-8">
       {/* Leftmost: Leader button to Task Management */}
       {isLeader && (
-        <div className="w-full md:w-60 flex flex-col gap-4 mb-8 md:mb-0">
-          <button
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg shadow mb-4"
-            onClick={() =>
-              navigate(`/project/${projectId}/tasks`)
-            }
+        <div className="w-full md:w-64 flex flex-col gap-6 mb-8 md:mb-0">
+          <Button
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest py-6 rounded-2xl shadow-[0_6px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none transition-all"
+            onClick={() => navigate(`/project/${projectId}/tasks`)}
           >
-            Go to Task Management
-          </button>
-          <div className="bg-gray-800 rounded-lg shadow-inner p-4 overflow-y-auto max-h-[40vh]">
-            <h3 className="text-xl font-bold text-orange-400 mb-4">
-              Pending Join Requests
-            </h3>
-            {requestsLoading ? (
-              <div className="text-gray-400">Loading requests...</div>
-            ) : pendingRequests.length === 0 ? (
-              <div className="text-gray-500">No pending requests.</div>
-            ) : (
-              <ul className="space-y-3">
-                {pendingRequests.map((req) => (
-                  <li
-                    key={req.id}
-                    className="bg-gray-700 rounded p-3 flex flex-col gap-2"
-                  >
-                    <span className="font-semibold text-white">
-                      {req.full_name}
-                    </span>
-                    <span className="text-gray-400 text-xs">{req.email}</span>
-                    <span className="text-gray-500 text-xs mt-1">
-                      Status: {req.status}
-                    </span>
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-semibold"
-                        onClick={async () => {
-                          try {
-                            await axiosInstance.post(`project/${projectId}/requests/${req.id}/accept`, {});
-                            toast.success("Request accepted and member added.");
-                            setPendingRequests((prev) =>
-                              prev.filter((r) => r.id !== req.id)
-                            );
-                          } catch (err) {
-                            toast.error("Failed to accept request.");
-                          }
-                        }}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded font-semibold"
-                        onClick={async () => {
-                          try {
-                            await axiosInstance.delete(`project/${projectId}/requests/${req.id}`);
-                            toast.info("Request rejected and removed.");
-                            setPendingRequests((prev) =>
-                              prev.filter((r) => r.id !== req.id)
-                            );
-                          } catch (err) {
-                            toast.error("Failed to reject request.");
-                          }
-                        }}
-                      >
-                        Reject
-                      </button>
+            <Layout size={18} className="mr-2" /> Task Center
+          </Button>
+
+          <Card className="bg-gray-800/50 border-gray-700/50 backdrop-blur-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-black italic tracking-tighter text-orange-500">
+                PENDING REQUESTS
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="max-h-[50vh] overflow-y-auto">
+              {requestsLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : pendingRequests.length === 0 ? (
+                <p className="text-gray-500 font-bold text-sm text-center py-4 italic">Zero active signals.</p>
+              ) : (
+                <div className="space-y-4">
+                  {pendingRequests.map((req) => (
+                    <div key={req.id} className="p-4 bg-gray-900/50 rounded-xl border border-gray-700/30 group">
+                      <p className="font-black text-white text-sm group-hover:text-orange-500 transition-colors truncate">
+                        {req.full_name}
+                      </p>
+                      <p className="text-gray-500 text-[10px] font-bold mb-3">{req.email}</p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500 hover:text-white font-black uppercase text-[10px]"
+                          onClick={async () => {
+                            try {
+                              await axiosInstance.post(`project/${projectId}/requests/${req.id}/accept`, {});
+                              toast.success("Member recruited.");
+                              setPendingRequests(prev => prev.filter(r => r.id !== req.id));
+                            } catch (err) {
+                              toast.error("Operation failed.");
+                            }
+                          }}
+                        >
+                          Recruit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="flex-1 text-gray-500 hover:text-red-500 font-black uppercase text-[10px]"
+                          onClick={async () => {
+                            try {
+                              await axiosInstance.delete(`project/${projectId}/requests/${req.id}`);
+                              toast.info("Request denied.");
+                              setPendingRequests(prev => prev.filter(r => r.id !== req.id));
+                            } catch (err) {
+                              toast.error("Operation failed.");
+                            }
+                          }}
+                        >
+                          Deny
+                        </Button>
+                      </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
       {/* Main Project Details */}
@@ -248,12 +265,9 @@ const ProjectDetails = () => {
             </h3>
             <div className="flex flex-wrap gap-2">
               {project.required_skills?.map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-orange-500 text-white text-sm font-semibold px-3 py-1 rounded-full"
-                >
+                <Badge key={index} variant="secondary" className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">
                   {tag}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
@@ -261,42 +275,40 @@ const ProjectDetails = () => {
             <h3 className="text-2xl font-bold text-white mb-2">Tech Stack</h3>
             <div className="flex flex-wrap gap-2">
               {project.tech_stack?.map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-red-500 text-white text-sm font-semibold px-3 py-1 rounded-full"
-                >
+                <Badge key={index} variant="outline" className="bg-red-500/5 text-red-500 border-red-500/20 font-black uppercase text-[10px] tracking-widest px-3 py-1">
                   {tag}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
         </div>
         {isLeader && (
-          <div className="mt-8">
-            <h3 className="text-3xl font-bold text-white mb-4">Leader Tools</h3>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-inner">
-              <p className="text-gray-300">
-                You can manage members, send invites, and manage project
-                settings here.
-              </p>
-              {/* TODO: Add mentor assignment and member management UI here */}
-              <div className="flex gap-4 mt-6">
-                <button
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
-                  onClick={() =>
-                    navigate(`/project/${projectId}/edit`)
-                  }
-                >
-                  Edit Project
-                </button>
-                <button
-                  className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
-                  onClick={() => setIsDeleteModalOpen(true)}
-                >
-                  Delete Project
-                </button>
-              </div>
-            </div>
+          <div className="mt-12">
+            <Card className="bg-gray-900 border-2 border-orange-500/20 overflow-hidden">
+              <CardHeader className="bg-orange-500/5 border-b border-orange-500/10">
+                <CardTitle className="text-2xl font-black italic tracking-tighter text-white">LEADER TOOLS</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <p className="text-gray-400 font-medium mb-8">
+                  Authorize system modifications, finalize recruitment, and manage the core project architecture.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Button
+                    onClick={() => navigate(`/project/${projectId}/edit`)}
+                    className="bg-white text-black hover:bg-gray-200 font-black uppercase tracking-widest text-xs h-12 px-8"
+                  >
+                    <Edit size={16} className="mr-2" /> Modify Specs
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="border-gray-800 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 text-gray-500 font-black uppercase tracking-widest text-xs h-12 px-8"
+                  >
+                    <Trash2 size={16} className="mr-2" /> Abort Mission
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
         <RelatedProjects currentProjectId={projectId} />

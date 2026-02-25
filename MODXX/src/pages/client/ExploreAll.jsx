@@ -5,10 +5,14 @@ import apiClient from "../../api/axiosInstance";
 import { toast } from "react-toastify";
 import {
   ArrowLeft,
-  Loader2,
   Sparkles,
   Grid3x3,
+  SearchX,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "../../context/AuthContext";
 import ProjectCard from "../../components/ProjectCard";
 
@@ -151,15 +155,17 @@ const ExploreAll = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="mb-6"
+            className="mb-8"
           >
-            <Link
-              to="/explore"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800/80 hover:bg-gray-700/80 text-gray-300 hover:text-white rounded-xl border border-gray-700/50 hover:border-orange-500/30 transition-all duration-300 font-medium"
+            <Button
+              asChild
+              variant="outline"
+              className="bg-gray-900/50 backdrop-blur-xl border-gray-800 hover:border-orange-500/50 text-gray-400 hover:text-white font-black uppercase tracking-[0.2em] text-[10px] h-10 px-6 rounded-xl transition-all duration-300"
             >
-              <ArrowLeft size={20} />
-              Back to Explore
-            </Link>
+              <Link to="/explore">
+                <ArrowLeft size={14} className="mr-2" /> Sector Return
+              </Link>
+            </Button>
           </motion.div>
 
           {/* Page Title */}
@@ -182,16 +188,19 @@ const ExploreAll = () => {
           </motion.div>
 
           {/* Stats */}
+          {/* Stats Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center justify-center gap-2 mb-8 p-4 bg-gray-800/50 border border-gray-700/50 rounded-lg"
+            className="flex items-center justify-center mb-12"
           >
-            <Sparkles className="text-orange-400" />
-            <p className="text-white font-semibold">
-              Showing {displayedProjects.length} of {allProjects.length} projects
-            </p>
+            <Badge variant="outline" className="bg-orange-500/5 border-orange-500/20 px-6 py-2 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.1)]">
+              <Sparkles className="text-orange-500 w-4 h-4 mr-2" />
+              <span className="text-orange-100 font-black uppercase tracking-widest text-[10px]">
+                CALIBRATED: {displayedProjects.length} / {allProjects.length} SIGNALS DETECTED
+              </span>
+            </Badge>
           </motion.div>
         </div>
       </div>
@@ -199,27 +208,35 @@ const ExploreAll = () => {
       {/* Projects Section */}
       <div className="max-w-6xl mx-auto px-4">
         {loading ? (
-          <div className="flex items-center justify-center py-32">
-            <div className="text-center">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="mb-4"
-              >
-                <Loader2 className="w-16 h-16 text-orange-500 mx-auto" />
-              </motion.div>
-              <p className="text-gray-400 text-lg font-medium">Loading projects...</p>
-            </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="bg-gray-900/50 border-gray-800 p-6 space-y-6 animate-pulse">
+                <Skeleton className="w-full h-48 rounded-xl" />
+                <div className="space-y-4">
+                  <Skeleton className="h-8 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-24" />
+                </div>
+              </Card>
+            ))}
           </div>
         ) : allProjects.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gray-800 p-12 rounded-lg text-center mt-12"
+            className="bg-gray-900/50 border-2 border-dashed border-gray-800 p-20 rounded-[3rem] text-center mt-12 shadow-2xl"
           >
-            <h3 className="text-3xl text-gray-400 mb-2">No projects found</h3>
-            <p className="text-gray-500 text-lg">
-              Check back later for new projects.
+            <div className="bg-gray-800/50 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8 border-4 border-gray-700/50">
+              <SearchX size={48} className="text-gray-600" />
+            </div>
+            <h3 className="text-4xl font-black italic tracking-tighter text-gray-500 mb-4 uppercase">
+              GRID VACANT
+            </h3>
+            <p className="text-gray-600 font-medium max-w-sm mx-auto">
+              The project matrix is currently empty. Re-initiate search at a later timestamp.
             </p>
           </motion.div>
         ) : (
@@ -250,21 +267,14 @@ const ExploreAll = () => {
 
             {/* Loading More Indicator */}
             {loadingMore && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center justify-center py-12"
-              >
-                <div className="flex items-center gap-3 px-6 py-3 bg-gray-800/80 rounded-xl border border-gray-700/50">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Loader2 className="w-6 h-6 text-orange-500" />
-                  </motion.div>
-                  <span className="text-gray-300 font-medium">Loading more projects...</span>
-                </div>
-              </motion.div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="bg-gray-900/50 border-gray-800 p-6 space-y-6 opacity-50">
+                    <Skeleton className="w-full h-48 rounded-xl" />
+                    <Skeleton className="h-8 w-3/4" />
+                  </Card>
+                ))}
+              </div>
             )}
 
             {/* Intersection Observer Target */}

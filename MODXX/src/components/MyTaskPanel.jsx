@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { useAuth } from "../context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckCircle, Clock, Calendar, AlertCircle, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const MyTaskPanel = ({ projectId }) => {
   const { user } = useAuth();
@@ -45,43 +51,72 @@ const MyTaskPanel = ({ projectId }) => {
   if (!user) return null;
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-inner p-4 overflow-y-auto max-h-[40vh] w-full mb-8">
-      <h3 className="text-lg font-bold text-orange-400 mb-2">My Tasks</h3>
-      {error && <div className="text-red-400 mb-2">{error}</div>}
+    <div className="space-y-4">
+      {error && (
+        <Badge variant="destructive" className="w-full justify-center py-2 rounded-xl mb-2">
+          <AlertCircle size={14} className="mr-2" /> {error}
+        </Badge>
+      )}
+      
       {loading ? (
-        <div className="text-gray-400">Loading tasks...</div>
-      ) : tasks.length === 0 ? (
-        <div className="text-gray-500">No tasks assigned.</div>
-      ) : (
-        <ul className="space-y-2">
-          {tasks.map((task) => (
-            <li
-              key={task.id}
-              className="bg-gray-700 rounded p-2 flex flex-col gap-1"
-            >
-              <span className="font-semibold text-white">{task.title}</span>
-              <span className="text-xs text-gray-300">{task.description}</span>
-              <span className="text-xs text-gray-400">
-                Deadline:{" "}
-                {task.deadline
-                  ? new Date(task.deadline).toLocaleDateString()
-                  : "N/A"}
-              </span>
-              <span className="text-xs text-gray-400">
-                Status: {task.status}
-              </span>
-              {task.status !== "done" && (
-                <button
-                  className="btn btn-xs btn-success mt-1 w-fit"
-                  onClick={() => handleMarkDone(task.id)}
-                  disabled={loading}
-                >
-                  Mark as Done
-                </button>
-              )}
-            </li>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-2xl bg-gray-800/50" />
           ))}
-        </ul>
+        </div>
+      ) : tasks.length === 0 ? (
+        <div className="text-center py-8 bg-gray-950/30 rounded-2xl border border-gray-800 border-dashed">
+          <p className="text-gray-600 font-bold text-[10px] tracking-widest uppercase mb-1">ZERO ASSIGNMENTS</p>
+          <p className="text-gray-700 italic text-xs">Awaiting mission protocols.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {tasks.map((task) => (
+            <Card
+              key={task.id}
+              className="bg-gray-800/20 border-gray-800/50 hover:border-orange-500/30 transition-all group overflow-hidden"
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors uppercase text-sm truncate">
+                    {task.title}
+                  </h4>
+                  <Badge 
+                    className={cn(
+                      "text-[8px] px-2 py-0.5 font-black uppercase tracking-widest",
+                      task.status === "done" ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                    )}
+                  >
+                    {task.status || "PENDING"}
+                  </Badge>
+                </div>
+                
+                <p className="text-gray-500 text-[10px] leading-tight mb-3 line-clamp-2">
+                  {task.description}
+                </p>
+
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Calendar size={10} />
+                    <span className="text-[9px] font-black uppercase">{task.deadline ? new Date(task.deadline).toLocaleDateString() : "N/A"}</span>
+                  </div>
+                </div>
+
+                {task.status !== "done" && (
+                  <Button
+                    onClick={() => handleMarkDone(task.id)}
+                    disabled={loading}
+                    variant="outline"
+                    className="w-full h-8 bg-green-500/5 text-green-500 border-green-500/20 hover:bg-green-500 hover:text-white font-black uppercase tracking-widest text-[9px] rounded-lg"
+                  >
+                    {loading ? <Loader2 className="animate-spin mr-2" size={12} /> : <CheckCircle size={12} className="mr-2" />}
+                    COMPLETE UNIT
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

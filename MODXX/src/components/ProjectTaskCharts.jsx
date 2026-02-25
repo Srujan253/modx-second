@@ -13,6 +13,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import axiosInstance from "../api/axiosInstance";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, PieChart as PieIcon, Activity, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const COLORS = [
   "#34d399",
@@ -137,112 +142,174 @@ const ProjectTaskCharts = ({ projectId, members }) => {
 
   if (loading)
     return (
-      <div className="text-center py-8 text-gray-400">Loading charts...</div>
+      <div className="space-y-10 mt-10">
+        <div className="grid md:grid-cols-2 gap-8">
+          <Skeleton className="h-[350px] w-full rounded-[2rem] bg-gray-900 border border-gray-800" />
+          <Skeleton className="h-[350px] w-full rounded-[2rem] bg-gray-900 border border-gray-800" />
+        </div>
+        <Skeleton className="h-[400px] w-full rounded-[2rem] bg-gray-900 border border-gray-800" />
+      </div>
     );
 
   return (
     <div className="space-y-10 mt-10">
       <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-xl">
-          <h3 className="text-lg font-bold text-white mb-4">
-            Completed Tasks Contribution
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={completedPie}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {completedPie.map((entry, idx) => (
-                  <Cell
-                    key={`cell-${idx}`}
-                    fill={COLORS[idx % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-xl">
-          <h3 className="text-lg font-bold text-white mb-4">
-            Expired Tasks (Not Done)
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={expiredPie}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                label
-              >
-                {expiredPie.map((entry, idx) => (
-                  <Cell
-                    key={`cell-${idx}`}
-                    fill="#f43f5e" // red color for expired tasks
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <Card className="bg-gray-950 border-gray-800 shadow-2xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-orange-500/5 border-b border-gray-900">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-500/10 rounded-xl text-orange-500">
+                <PieIcon size={18} />
+              </div>
+              <CardTitle className="text-sm font-black italic tracking-tighter text-white uppercase">CONTRIBUTION ANALYSIS</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-8">
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={completedPie}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  innerRadius={60}
+                  paddingAngle={5}
+                >
+                  {completedPie.map((entry, idx) => (
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill={COLORS[idx % COLORS.length]}
+                      stroke="rgba(0,0,0,0.5)"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }}
+                  itemStyle={{ color: '#fff', fontSize: '10px', textTransform: 'uppercase', fontWeight: 900 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-950 border-gray-800 shadow-2xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-red-500/5 border-b border-gray-900">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-500/10 rounded-xl text-red-500">
+                <Activity size={18} />
+              </div>
+              <CardTitle className="text-sm font-black italic tracking-tighter text-white uppercase">EXPIRATION TERMINALS</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-8">
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={expiredPie}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  innerRadius={60}
+                  paddingAngle={5}
+                >
+                  {expiredPie.map((entry, idx) => (
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill="#ef4444"
+                      stroke="rgba(0,0,0,0.5)"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }}
+                  itemStyle={{ color: '#fff', fontSize: '10px', textTransform: 'uppercase', fontWeight: 900 }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
-      <div className="bg-gray-800 rounded-2xl p-6 shadow-xl">
-        <h3 className="text-lg font-bold text-white mb-4">
-          Weekly Task Progress
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={dailyStats}
-            margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" tick={{ fill: "#fbbf24", fontSize: 12 }} />
-            <YAxis tick={{ fill: "#34d399", fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="assigned" fill="#fbbf24" name="Assigned" />
-            <Bar dataKey="completed" fill="#34d399" name="Completed" />
-            <Bar dataKey="pending" fill="#f59e42" name="Pending/In Progress" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="bg-gray-800 rounded-2xl p-6 shadow-xl overflow-x-auto">
-        <h3 className="text-lg font-bold text-white mb-4">Member Task Stats</h3>
-        <table className="min-w-full text-left">
-          <thead>
-            <tr className="text-gray-400">
-              <th className="py-2 px-4">Member</th>
-              <th className="py-2 px-4">Completed</th>
-              <th className="py-2 px-4">Expired</th>
-              <th className="py-2 px-4">Uncompleted</th>
-            </tr>
-          </thead>
-          <tbody>
-            {memberStats.map((row, idx) => (
-              <tr key={idx} className="border-b border-gray-700">
-                <td className="py-2 px-4 text-white font-semibold">
-                  {row.name}
-                </td>
-                <td className="py-2 px-4 text-green-400">{row.completed}</td>
-                <td className="py-2 px-4 text-orange-400">{row.expired}</td>
-                <td className="py-2 px-4 text-yellow-400">{row.uncompleted}</td>
+
+      <Card className="bg-gray-950 border-gray-800 shadow-2xl rounded-[2rem] overflow-hidden">
+        <CardHeader className="bg-blue-500/5 border-b border-gray-900">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
+              <TrendingUp size={18} />
+            </div>
+            <CardTitle className="text-sm font-black italic tracking-tighter text-white uppercase">TEMPORAL PROGRESS GRID</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-8">
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={dailyStats}
+              margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+            >
+              <XAxis dataKey="date" tick={{ fill: "#666", fontSize: 10, fontWeight: 900 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#666", fontSize: 10, fontWeight: 900 }} axisLine={false} tickLine={false} />
+              <Tooltip 
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '12px' }}
+              />
+              <Bar dataKey="assigned" fill="#fbbf24" name="DEPLOYED" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="completed" fill="#10b981" name="SECURED" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="pending" fill="#3b82f6" name="ACTIVE" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gray-950 border-gray-800 shadow-2xl rounded-[3rem] overflow-hidden">
+        <CardHeader className="bg-gray-900/50 border-b border-gray-800 p-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gray-800 rounded-xl text-gray-400">
+              <Users size={18} />
+            </div>
+            <CardTitle className="text-xl font-black italic tracking-tighter text-white uppercase">UNIT TELEMETRY FEED</CardTitle>
+          </div>
+        </CardHeader>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left">
+            <thead>
+              <tr className="bg-gray-900/30">
+                <th className="py-4 px-8 text-[10px] font-black uppercase tracking-widest text-gray-500">UNIT ID</th>
+                <th className="py-4 px-8 text-[10px] font-black uppercase tracking-widest text-gray-500">SECURED</th>
+                <th className="py-4 px-8 text-[10px] font-black uppercase tracking-widest text-gray-500">EXPIRED</th>
+                <th className="py-4 px-8 text-[10px] font-black uppercase tracking-widest text-gray-500">ACTIVE</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {memberStats.map((row, idx) => (
+                <tr key={idx} className="border-b border-gray-800/50 hover:bg-gray-800/20 transition-colors">
+                  <td className="py-6 px-8">
+                    <span className="text-white font-black italic tracking-tighter uppercase">{row.name}</span>
+                  </td>
+                  <td className="py-6 px-8">
+                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 font-black">
+                      {row.completed}
+                    </Badge>
+                  </td>
+                  <td className="py-6 px-8">
+                    <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-black">
+                      {row.expired}
+                    </Badge>
+                  </td>
+                  <td className="py-6 px-8">
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black">
+                      {row.uncompleted}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 };

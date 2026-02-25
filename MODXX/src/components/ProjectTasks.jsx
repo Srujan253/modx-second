@@ -16,7 +16,22 @@ import {
   Crown,
   Shield,
   UserCheck,
+  SearchX,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const ProjectTasks = (props) => {
   const {
@@ -151,33 +166,28 @@ const ProjectTasks = (props) => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-500/20 rounded-lg">
-            <Target className="w-5 h-5 text-orange-400" />
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
+            <Target className="w-6 h-6 text-orange-500" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">
-              {isMember ? "My Tasks" : "All Tasks"}
+            <h3 className="text-xl font-black italic tracking-tighter text-white uppercase">
+              {isMember ? "PERSONAL DEPLOYMENTS" : "GLOBAL OBJECTIVES"}
             </h3>
-            <p className="text-gray-400 text-sm">
-              {visibleTasks.length}{" "}
-              {visibleTasks.length === 1 ? "task" : "tasks"}
-              {isMember ? " assigned to you" : " in total"}
+            <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
+              {visibleTasks.length} {visibleTasks.length === 1 ? "ACTIVE SIGNAL" : "ACTIVE SIGNALS"} DETECTED
             </p>
           </div>
         </div>
 
         {showAssignForm && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <Button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
+            className="bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest px-6 py-6 rounded-2xl shadow-[0_6px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none transition-all"
           >
-            <Plus size={16} />
-            New Task
-          </motion.button>
+            <Plus size={18} className="mr-2" /> NEW OBJECTIVE
+          </Button>
         )}
       </div>
 
@@ -202,146 +212,158 @@ const ProjectTasks = (props) => {
       <AnimatePresence>
         {showAssignForm && showForm && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="mb-8"
           >
-            <div className="bg-gray-700/30 backdrop-blur-sm rounded-2xl border border-gray-600/30 p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Plus className="w-5 h-5 text-orange-400" />
-                <h4 className="text-lg font-bold text-white">
-                  Create New Task
-                </h4>
+            <Card className="bg-gray-950 border-gray-800 p-8 rounded-3xl overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-3xl rounded-full" />
+              
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3 bg-orange-500/10 rounded-2xl border border-orange-500/20">
+                  <Plus className="w-6 h-6 text-orange-500" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-black italic tracking-tighter text-white uppercase">
+                    INITIALIZE NEW SECTOR
+                  </h4>
+                  <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
+                    CONFIGURE MISSION PARAMETERS
+                  </p>
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Task Title
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
+                    OBJECTIVE TITLE
                   </label>
-                  <input
+                  <Input
                     name="title"
                     value={form.title}
                     onChange={handleChange}
-                    placeholder="Enter task title..."
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50 focus:bg-gray-800/70 transition-all"
+                    placeholder="ENTER MISSION PROTOCOLEN..."
+                    className="h-14 bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold placeholder:text-gray-700 focus:border-orange-500/30 transition-all"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Description
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
+                    MISSION BRIEFING
                   </label>
-                  <textarea
+                  <Textarea
                     name="description"
                     value={form.description}
                     onChange={handleChange}
-                    placeholder="Describe the task..."
-                    rows={4}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500/50 focus:bg-gray-800/70 transition-all resize-none"
+                    placeholder="DESCRIBE DEPLOYMENT PARAMETERS..."
+                    className="bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold placeholder:text-gray-700 focus:border-orange-500/30 transition-all min-h-[120px]"
                     required
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Deadline
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
+                      TERMINATION DATE
                     </label>
-                    <input
+                    <Input
                       name="deadline"
                       type="date"
                       value={form.deadline}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:border-orange-500/50 focus:bg-gray-800/70 transition-all"
+                      className="h-14 bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold focus:border-orange-500/30 transition-all [color-scheme:dark]"
                       required
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Assign to
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
+                      ASSIGN PERSONNEL
                     </label>
-                    <select
-                      name="assigned_to"
+                    <Select
                       value={form.assigned_to}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600/50 rounded-xl text-white focus:outline-none focus:border-orange-500/50 focus:bg-gray-800/70 transition-all"
-                      required
+                      onValueChange={(val) => setForm({ ...form, assigned_to: val })}
                     >
-                      <option value="">Select member...</option>
-                      {members.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.full_name}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-14 bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold focus:border-orange-500/30 transition-all">
+                        <SelectValue placeholder="SELECT UNIT..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-gray-800 text-white">
+                        {members.map((m) => (
+                          <SelectItem key={m.id} value={m.id} className="hover:bg-gray-800">
+                            {m.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                <div className="flex gap-4 pt-4">
+                  <Button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 h-14 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest rounded-2xl shadow-[0_6px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50"
                   >
                     {loading ? (
                       <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Creating...
+                        <Loader2 size={18} className="animate-spin mr-2" />
+                        INITIALIZING...
                       </>
                     ) : (
                       <>
-                        <Plus size={16} />
-                        Create Task
+                        <Plus size={18} className="mr-2" /> START MISSION
                       </>
                     )}
-                  </motion.button>
+                  </Button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => setShowForm(false)}
-                    className="px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded-xl font-semibold transition-all border border-gray-600/30"
+                    className="h-14 px-8 bg-gray-900 border-gray-800 text-gray-500 hover:text-white font-black uppercase tracking-widest rounded-2xl border-2 hover:border-gray-700 transition-all"
                   >
-                    Cancel
-                  </motion.button>
+                    ABORT
+                  </Button>
                 </div>
               </form>
-            </div>
+            </Card>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Tasks List */}
       {loading && visibleTasks.length === 0 ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto mb-3" />
-            <p className="text-gray-400">Loading tasks...</p>
-          </div>
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="bg-gray-900 border-gray-800 p-8 space-y-6">
+              <div className="flex justify-between">
+                <Skeleton className="h-8 w-1/3 rounded-lg" />
+                <Skeleton className="h-6 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+              </div>
+            </Card>
+          ))}
         </div>
       ) : visibleTasks.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center py-12"
-        >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-700/30 flex items-center justify-center">
-            <Target size={32} className="text-gray-500" />
+        <div className="text-center py-24 bg-gray-950/50 rounded-[3rem] border-2 border-dashed border-gray-800">
+          <div className="bg-gray-900 w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-8 border-4 border-gray-800 shadow-2xl">
+            <SearchX size={40} className="text-gray-700" />
           </div>
-          <h3 className="text-xl font-bold text-gray-400 mb-2">No tasks yet</h3>
-          <p className="text-gray-500">
+          <h3 className="text-3xl font-black italic tracking-tighter text-gray-500 mb-4 uppercase">
+            TARGETS UNREACHABLE
+          </h3>
+          <p className="text-gray-600 font-medium max-w-sm mx-auto">
             {showAssignForm
-              ? "Create your first task to get started"
-              : "No tasks have been assigned to you yet"}
+              ? "No objectives found in this sector. Initiate first deployment sequence."
+              : "Zero assignments detected for your current unit profile."}
           </p>
-        </motion.div>
+        </div>
       ) : (
         <div className="space-y-4">
           <AnimatePresence>
@@ -384,131 +406,95 @@ const ProjectTasks = (props) => {
               // ...existing code...
               return (
                 <React.Fragment key={task.id}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    className="bg-gray-700/30 backdrop-blur-sm rounded-2xl border border-gray-600/30 p-6 hover:border-orange-500/30 transition-all duration-300 group"
-                  >
-                    {/* ...existing code for task card... */}
-                    <div className="flex items-start justify-between mb-4">
+                  <Card className="bg-gray-900 border-gray-800 p-8 hover:border-orange-500/30 transition-all duration-500 group relative overflow-hidden mb-6">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-all" />
+                    
+                    <div className="flex items-start justify-between mb-8">
                       <div className="flex-1">
-                        <h4 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors mb-2">
+                        <h4 className="text-2xl font-black italic tracking-tighter text-white group-hover:text-orange-500 transition-colors uppercase mb-3">
                           {task.title}
                         </h4>
-                        <p className="text-gray-300 text-sm leading-relaxed">
+                        <p className="text-gray-500 font-medium text-sm leading-relaxed max-w-2xl">
                           {task.description}
                         </p>
                       </div>
-                      <div
-                        className={`flex items-center gap-1 px-3 py-1 rounded-full border ${
-                          task.status !== "done" &&
-                          task.deadline &&
-                          new Date(task.deadline) < new Date()
-                            ? "text-red-400 bg-red-500/20 border-red-500/30"
-                            : getStatusColor(task.status)
-                        }`}
+                      <Badge 
+                        className={cn(
+                          "px-4 py-1.5 font-black uppercase tracking-widest text-[10px] rounded-full",
+                          task.status === "done" ? "bg-green-500/10 text-green-500 border-green-500/20" :
+                          task.status === "in-progress" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                          "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+                          task.status !== "done" && task.deadline && new Date(task.deadline) < new Date() && "bg-red-500/10 text-red-500 border-red-500/20"
+                        )}
                       >
-                        <StatusIcon size={12} />
-                        <span className="text-xs font-medium capitalize">
-                          {task.status !== "done" &&
-                          task.deadline &&
-                          new Date(task.deadline) < new Date()
-                            ? "expired"
-                            : task.status || "pending"}
-                        </span>
-                      </div>
+                        <StatusIcon size={10} className="mr-2" />
+                        {task.status !== "done" && task.deadline && new Date(task.deadline) < new Date() ? "EXPIRED" : task.status || "PENDING"}
+                      </Badge>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gray-600/30 rounded-lg">
-                          <User size={16} className="text-blue-400" />
+
+                    <div className="grid md:grid-cols-2 gap-8 mb-10">
+                      <div className="flex items-center gap-4 bg-gray-800/20 p-4 rounded-2xl border border-gray-800/50">
+                        <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
+                          <User size={18} />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400">Assigned to</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-1">UNIT ASSIGNED</p>
                           <div className="flex items-center gap-2">
-                            <p className="text-white font-medium">
-                              {assignedMember?.full_name || task.assigned_to}
-                            </p>
+                            <span className="text-white font-bold">{assignedMember?.full_name || "UNKNOWN UNIT"}</span>
                             {assignedMember?.role && (
-                              <div className="flex items-center gap-1">
-                                <RoleIcon
-                                  size={12}
-                                  className="text-orange-400"
-                                />
-                              </div>
+                              <Badge variant="outline" className="text-[8px] h-4 bg-orange-500/5 text-orange-500 border-orange-500/20">
+                                {assignedMember.role}
+                              </Badge>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gray-600/30 rounded-lg">
-                          <Calendar size={16} className="text-purple-400" />
+
+                      <div className="flex items-center gap-4 bg-gray-800/20 p-4 rounded-2xl border border-gray-800/50">
+                        <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500">
+                          <Calendar size={18} />
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400">Deadline</p>
-                          <p className="text-white font-medium">
-                            {task.deadline
-                              ? new Date(task.deadline).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  }
-                                )
-                              : "No deadline"}
-                          </p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-1">TERMINATION</p>
+                          <span className="text-white font-bold">
+                            {task.deadline ? new Date(task.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "INDETERMINATE"}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    {isMember &&
-                      task.status !== "done" &&
-                      task.assigned_to === user.id && (
-                        <div className="pt-4 border-t border-gray-600/30">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleMarkDone(task.id)}
-                            disabled={loading}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+
+                    <div className="flex items-center gap-4 pt-8 border-t border-gray-800/50">
+                      {isMember && task.status !== "done" && task.assigned_to === user.id && (
+                        <Button
+                          onClick={() => handleMarkDone(task.id)}
+                          disabled={loading}
+                          className="bg-green-500 hover:bg-green-600 text-white font-black uppercase tracking-widest px-6 h-10 rounded-xl transition-all"
+                        >
+                          {loading ? <Loader2 className="animate-spin mr-2" size={14} /> : <CheckCircle size={14} className="mr-2" />}
+                          MARCAR CONCLUÍDO
+                        </Button>
+                      )}
+                      
+                      {canEditDelete && (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={openEdit}
+                            className="bg-blue-500/5 text-blue-500 border-blue-500/20 hover:bg-blue-500 hover:text-white font-black uppercase tracking-widest text-[10px] px-6 h-10 rounded-xl transition-all"
                           >
-                            {loading ? (
-                              <>
-                                <Loader2 size={14} className="animate-spin" />
-                                Updating...
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle size={14} />
-                                Mark as Done
-                              </>
-                            )}
-                          </motion.button>
+                            <FileText size={14} className="mr-2" /> RECONFIG
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setConfirmDeleteId(task.id)}
+                            className="bg-red-500/5 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-[10px] px-6 h-10 rounded-xl transition-all"
+                          >
+                            <AlertCircle size={14} className="mr-2" /> PURGE
+                          </Button>
                         </div>
                       )}
-                    {canEditDelete && (
-                      <div className="pt-4 border-t border-gray-600/30 flex gap-3">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={openEdit}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                        >
-                          <FileText size={14} /> Edit
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setConfirmDeleteId(task.id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-                        >
-                          <AlertCircle size={14} /> Delete
-                        </motion.button>
-                      </div>
-                    )}
-                  </motion.div>
+                    </div>
+                  </Card>
                   {/* Edit Modal */}
                   {editTaskId === task.id && (
                     <div className="fixed inset-0 z-50 flex justify-center items-start bg-black/40">
