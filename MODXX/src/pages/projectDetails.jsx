@@ -24,6 +24,7 @@ import {
   Target
 } from "lucide-react";
 
+import { useAuth } from "../context/AuthContext";
 import axiosInstance, { BASE_URL } from "../api/axiosInstance";
 
 const ProjectDetails = () => {
