@@ -204,56 +204,91 @@ const Dashboard = () => {
     </motion.div>
   );
 
-  const EmptyState = ({ type, icon: Icon, title, description }) => (
+  const InviteCard = ({ invite, isListView = false }) => (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="bg-gray-800/50 backdrop-blur-sm p-6 sm:p-8 lg:p-12 rounded-xl text-center border border-gray-700/50"
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.3 }}
+      className={`bg-gray-800/90 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-gray-700/50 hover:border-orange-500/30 transition-all duration-300 shadow-lg ${
+        isListView ? 'flex flex-col sm:flex-row items-start sm:items-center gap-4' : ''
+      }`}
     >
-      <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 rounded-full bg-gray-700/50 flex items-center justify-center">
-        <Icon size={24} className="sm:hidden text-gray-500" />
-        <Icon size={32} className="hidden sm:block text-gray-500" />
+      <div className="flex items-start gap-4 flex-1">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+          <User size={20} className="text-orange-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-lg sm:text-xl font-bold text-orange-400 truncate mb-1">
+            {invite.project_title}
+          </h4>
+          <p className="text-gray-300 text-sm sm:text-base mb-4">
+            You've been invited by <span className="font-semibold text-white">{invite.leader_name}</span> to join this project.
+          </p>
+          
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg font-bold transition-all border border-green-500/30 flex items-center justify-center gap-2 text-sm sm:text-base"
+              onClick={() => handleAcceptInvite(invite.id, invite.project_id)}
+            >
+              <CheckCircle size={18} />
+              Accept
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-bold transition-all border border-red-500/30 flex items-center justify-center text-sm sm:text-base"
+              onClick={() => handleRejectInvite(invite.id, invite.project_id)}
+            >
+              Reject
+            </motion.button>
+          </div>
+        </div>
       </div>
-      <h3 className="text-xl sm:text-2xl text-gray-400 mb-2 font-semibold">{title}</h3>
-      <p className="text-gray-500 text-sm sm:text-base">{description}</p>
     </motion.div>
   );
 
   const renderProjects = () => {
-    let projectsToShow = [];
     let emptyConfig = {};
 
     switch (activeTab) {
       case 'my-projects':
-        projectsToShow = projects;
         emptyConfig = {
           icon: Plus,
           title: "No projects yet",
           description: "Start your journey by creating your first project!"
         };
+        if (projects.length === 0) return <EmptyState type={activeTab} {...emptyConfig} />;
         break;
       case 'selected':
-        projectsToShow = selectedProjects;
         emptyConfig = {
           icon: CheckCircle,
           title: "No joined projects",
           description: "You are not a member of any projects yet."
         };
+        if (selectedProjects.length === 0) return <EmptyState type={activeTab} {...emptyConfig} />;
         break;
       case 'pending':
-        projectsToShow = pendingRequests;
         emptyConfig = {
           icon: Clock,
           title: "No pending requests",
           description: "You have no pending join requests."
         };
+        if (pendingRequests.length === 0) return <EmptyState type={activeTab} {...emptyConfig} />;
+        break;
+      case 'invites':
+        emptyConfig = {
+          icon: Bell,
+          title: "No invitations",
+          description: "You don't have any pending project invitations."
+        };
+        if (invites.length === 0) return <EmptyState type={activeTab} {...emptyConfig} />;
         break;
       default:
-        projectsToShow = projects;
-    }
-
-    if (projectsToShow.length === 0) {
-      return <EmptyState type={activeTab} {...emptyConfig} />;
+        break;
     }
 
     return (
@@ -270,14 +305,24 @@ const Dashboard = () => {
               : 'flex flex-col gap-3 sm:gap-4'
           }
         >
-          {projectsToShow.map((project) => (
-            <ProjectCard 
-              key={`${activeTab}-${project.id}`} 
-              project={project} 
-              type={activeTab}
-              isListView={viewMode === 'list'} 
-            />
-          ))}
+          {activeTab === 'invites' ? (
+            invites.map((invite) => (
+              <InviteCard 
+                key={invite.id} 
+                invite={invite} 
+                isListView={viewMode === 'list'} 
+              />
+            ))
+          ) : (
+            (activeTab === 'my-projects' ? projects : activeTab === 'selected' ? selectedProjects : pendingRequests).map((project) => (
+              <ProjectCard 
+                key={`${activeTab}-${project.id}`} 
+                project={project} 
+                type={activeTab}
+                isListView={viewMode === 'list'} 
+              />
+            ))
+          )}
         </motion.div>
       </AnimatePresence>
     );
@@ -297,7 +342,7 @@ const Dashboard = () => {
             >
               <div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
-                  Welcome back, <span className="text-orange-500">{user?.name}</span>
+                  Welcome back, <span className="text-orange-500">{user?.name || user?.full_name}</span>
                 </h1>
                 <p className="text-gray-400 text-sm sm:text-base">Manage your projects and collaborations</p>
               </div>
@@ -324,7 +369,8 @@ const Dashboard = () => {
                 {[
                   { id: 'my-projects', label: 'My Projects', shortLabel: 'My', count: projects.length },
                   { id: 'selected', label: 'Joined Projects', shortLabel: 'Joined', count: selectedProjects.length },
-                  { id: 'pending', label: 'Pending', shortLabel: 'Pending', count: pendingRequests.length }
+                  { id: 'pending', label: 'Pending', shortLabel: 'Pending', count: pendingRequests.length },
+                  { id: 'invites', label: 'Invitations', shortLabel: 'Invites', count: invites.length }
                 ].map((tab) => (
                   <motion.button
                     key={tab.id}
@@ -373,93 +419,53 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Projects Grid */}
+            {/* Content Grid */}
             {renderProjects()}
           </div>
         </div>
 
-        {/* Invitations Sidebar - Mobile: Show as modal or collapsible section */}
+        {/* Desktop Sidebar (Optional/Secondary for Invitations) */}
         <motion.div 
           initial={{ x: 300, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full lg:w-96 bg-gray-800/50 backdrop-blur-sm border-t lg:border-t-0 lg:border-l border-gray-700/50 p-4 sm:p-6 lg:h-screen lg:overflow-y-auto"
+          className="hidden xl:block w-96 bg-gray-800/50 backdrop-blur-sm border-l border-gray-700/50 p-6 h-screen overflow-y-auto"
         >
-          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+          <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-orange-500/20 rounded-lg">
-              <Bell size={18} className="sm:hidden" />
-              <Bell size={20} className="hidden sm:block text-orange-400" />
+              <Bell size={20} className="text-orange-400" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg sm:text-xl font-bold text-white">Invitations</h3>
-              <p className="text-gray-400 text-xs sm:text-sm">Project invites & notifications</p>
+              <h3 className="text-xl font-bold text-white">Latest Invites</h3>
+              <p className="text-gray-400 text-sm">Quick access to project invites</p>
             </div>
-            {invites.length > 0 && (
-              <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                {invites.length}
-              </span>
-            )}
           </div>
 
           <AnimatePresence>
             {invites.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-8 sm:py-12"
-              >
-                <div className="w-12 sm:w-16 h-12 sm:h-16 mx-auto mb-4 rounded-full bg-gray-700/50 flex items-center justify-center">
-                  <Bell size={20} className="sm:hidden text-gray-500" />
-                  <Bell size={24} className="hidden sm:block text-gray-500" />
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-700/50 flex items-center justify-center">
+                  <Bell size={24} className="text-gray-500" />
                 </div>
-                <p className="text-gray-400 text-sm sm:text-base">No new invitations</p>
-              </motion.div>
+                <p className="text-gray-400">No new invitations</p>
+              </div>
             ) : (
-              <div className="space-y-3 sm:space-y-4">
-                {invites.map((invite, index) => (
+              <div className="space-y-4">
+                {invites.map((invite) => (
                   <motion.div
-                    key={invite.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -300 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="bg-gray-900/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-gray-700/50 hover:border-orange-500/30 transition-colors"
+                    key={`sidebar-${invite.id}`}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-gray-900/80 rounded-xl p-4 border border-gray-700/50 hover:border-orange-500/30 transition-all"
                   >
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-8 sm:w-10 h-8 sm:h-10 bg-orange-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User size={14} className="sm:hidden text-orange-400" />
-                        <User size={16} className="hidden sm:block text-orange-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-orange-400 truncate text-sm sm:text-base">
-                          {invite.project_title}
-                        </h4>
-                        <p className="text-gray-300 text-xs sm:text-sm">
-                          Invited by <span className="font-medium">{invite.leader_name}</span>
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg font-semibold transition-all border border-green-500/30 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                        onClick={() => handleAcceptInvite(invite.id, invite.project_id)}
-                      >
-                        <CheckCircle size={14} className="sm:hidden" />
-                        <CheckCircle size={16} className="hidden sm:block" />
-                        Accept
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-semibold transition-all border border-red-500/30 text-xs sm:text-sm"
-                        onClick={() => handleRejectInvite(invite.id, invite.project_id)}
-                      >
-                        Reject
-                      </motion.button>
-                    </div>
+                    <h4 className="font-semibold text-orange-400 mb-1 truncate">{invite.project_title}</h4>
+                    <p className="text-xs text-gray-400 mb-3">From {invite.leader_name}</p>
+                    <button 
+                      onClick={() => setActiveTab('invites')}
+                      className="text-xs font-bold text-orange-500 hover:text-orange-400 flex items-center gap-1"
+                    >
+                      View in Invitations Tab <ArrowRight size={12} />
+                    </button>
                   </motion.div>
                 ))}
               </div>

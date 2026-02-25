@@ -16,4 +16,8 @@ router.get("/users", getAllUsers);
 router.patch("/users/:userId/promote", promoteToAdmin);
 router.delete("/users/:userId", deleteUser);
 
+// Projects Management
+router.get("/projects", require("../controller/adminController").getAllProjects);
+router.delete("/projects/:projectId", require("../controller/adminController").deleteProject);
+
 module.exports = router;

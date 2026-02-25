@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -13,6 +13,7 @@ import axiosInstance, { BASE_URL } from "../api/axiosInstance";
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -134,7 +135,7 @@ const ProjectDetails = () => {
           <button
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg shadow mb-4"
             onClick={() =>
-              (window.location.href = `/project/${projectId}/tasks`)
+              navigate(`/project/${projectId}/tasks`)
             }
           >
             Go to Task Management
@@ -283,7 +284,7 @@ const ProjectDetails = () => {
                 <button
                   className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
                   onClick={() =>
-                    (window.location.href = `/project/${projectId}/edit`)
+                    navigate(`/project/${projectId}/edit`)
                   }
                 >
                   Edit Project
@@ -307,7 +308,7 @@ const ProjectDetails = () => {
             try {
               await axiosInstance.delete(`project/${projectId}`);
               toast.success("Project deleted successfully.");
-              window.location.href = "/dashboard";
+              navigate("/dashboard");
             } catch (error) {
               toast.error(
                 error.response?.data?.message || "Failed to delete project."

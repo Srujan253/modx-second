@@ -1,4 +1,9 @@
 const User = require("../models/User");
+const Project = require("../models/Project");
+const ProjectMember = require("../models/ProjectMember");
+const { deleteProjectFromIndex } = require("../aiHttpClient");
+const fs = require("fs");
+const path = require("path");
 
 // @desc    Get all users
 // @route   GET /api/v1/admin/users
@@ -71,5 +76,80 @@ exports.deleteUser = async (req, res) => {
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ success: false, message: "Server error deleting user." });
+  }
+};
+
+// @desc    Get all projects
+// @route   GET /api/v1/admin/projects
+// @access  Private/Admin
+exports.getAllProjects = async (req, res) => {
+  try {
+    const projects = await Project.find({})
+      .populate("leaderId", "fullName email")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const projectsWithDetails = await Promise.all(
+      projects.map(async (project) => {
+        const memberCount = await ProjectMember.countDocuments({
+          projectId: project._id,
+          status: "accepted",
+        });
+
+        return {
+          ...project,
+          id: project._id,
+          leader_name: project.leaderId?.fullName || "Unknown",
+          leader_email: project.leaderId?.email || "Unknown",
+          member_count: memberCount,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      count: projectsWithDetails.length,
+      projects: projectsWithDetails,
+    });
+  } catch (error) {
+    console.error("Error fetching projects for admin:", error);
+    res.status(500).json({ success: false, message: "Server error fetching projects." });
+  }
+};
+
+// @desc    Admin delete project
+// @route   DELETE /api/v1/admin/projects/:projectId
+// @access  Private/Admin
+exports.deleteProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found." });
+    }
+
+    // Remove project image if exists
+    if (project.projectImage && project.projectImage.startsWith("/uploads/")) {
+      const imagePath = path.join(__dirname, "..", project.projectImage);
+      fs.unlink(imagePath, (err) => {
+        if (err && err.code !== "ENOENT") {
+          console.error("Error deleting project image by admin:", err);
+        }
+      });
+    }
+
+    // Delete project and related data
+    await Project.findByIdAndDelete(projectId);
+    await ProjectMember.deleteMany({ projectId });
+    await deleteProjectFromIndex(projectId);
+
+    res.status(200).json({
+      success: true,
+      message: "Project deleted successfully by admin.",
+    });
+  } catch (error) {
+    console.error("Error deleting project by admin:", error);
+    res.status(500).json({ success: false, message: "Server error deleting project." });
   }
 };

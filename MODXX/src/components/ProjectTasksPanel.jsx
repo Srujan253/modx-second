@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import ProjectTasks from "./ProjectTasks";
 import MyTaskPanel from "./MyTaskPanel";
 import { useAuth } from "../context/AuthContext";
 
 const ProjectTasksPanel = ({ projectId }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ const ProjectTasksPanel = ({ projectId }) => {
         <button
           className="btn btn-primary w-full mb-2"
           onClick={() => {
-            window.location.href = `/project/${projectId}/tasks`;
+            navigate(`/project/${projectId}/tasks`);
           }}
         >
           Go to Task Management

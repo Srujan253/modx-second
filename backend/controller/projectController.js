@@ -162,20 +162,32 @@ exports.getUserInvites = async (req, res) => {
   const userId = req.user.id;
   try {
     const invites = await ProjectMember.find({ memberId: userId, status: "invited" })
-      .populate("projectId", "title")
+      .populate("projectId")
       .lean();
 
-    const formattedInvites = await Promise.all(
-      invites.map(async (inv) => {
-        const project = await Project.findById(inv.projectId).populate("leaderId", "fullName");
-        return {
-          id: inv._id,
-          project_id: inv.projectId._id,
-          project_title: inv.projectId.title,
-          leader_name: project.leaderId?.fullName || "Unknown",
-        };
-      })
-    );
+    const formattedInvites = [];
+    
+    for (const inv of invites) {
+      // Check if project exists and handle cases where it might have been deleted
+      if (!inv.projectId) {
+        console.warn(`[INVITE] Skipping orphaned invite ${inv._id} - Project not found.`);
+        continue;
+      }
+      
+      const project = await Project.findById(inv.projectId._id).populate("leaderId", "fullName");
+      
+      if (!project) {
+        console.warn(`[INVITE] Skipping invite ${inv._id} - Project ${inv.projectId._id} deleted.`);
+        continue;
+      }
+
+      formattedInvites.push({
+        id: inv._id,
+        project_id: inv.projectId._id,
+        project_title: inv.projectId.title,
+        leader_name: project.leaderId?.fullName || "Unknown",
+      });
+    }
 
     res.status(200).json({ success: true, invites: formattedInvites });
   } catch (error) {
