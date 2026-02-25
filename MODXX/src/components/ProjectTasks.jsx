@@ -26,10 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
-  SelectContent,
   SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
@@ -283,19 +280,18 @@ const ProjectTasks = (props) => {
                       ASSIGN PERSONNEL
                     </label>
                     <Select
+                      name="assigned_to"
                       value={form.assigned_to}
-                      onValueChange={(val) => setForm({ ...form, assigned_to: val })}
+                      onChange={handleChange}
+                      className="h-14 bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold focus:border-orange-500/30 transition-all px-4"
+                      required
                     >
-                      <SelectTrigger className="h-14 bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold focus:border-orange-500/30 transition-all">
-                        <SelectValue placeholder="SELECT UNIT..." />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-gray-800 text-white">
-                        {members.map((m) => (
-                          <SelectItem key={m.id} value={m.id} className="hover:bg-gray-800">
-                            {m.full_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                      <SelectItem value="">SELECT UNIT...</SelectItem>
+                      {members.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.full_name}
+                        </SelectItem>
+                      ))}
                     </Select>
                   </div>
                 </div>
