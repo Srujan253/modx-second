@@ -21,7 +21,8 @@ import {
   Calendar,
   Clock,
   ExternalLink,
-  Target
+  Target,
+  Star
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";

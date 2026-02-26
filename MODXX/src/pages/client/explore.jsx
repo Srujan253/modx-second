@@ -10,6 +10,7 @@ import {
   Briefcase,
   Sparkles,
   SearchX,
+  cn,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import ProjectCard from "../../components/ProjectCard";
