@@ -23,7 +23,7 @@ const MyTaskPanel = ({ projectId }) => {
         const allTasks = Array.isArray(res.data)
           ? res.data
           : res.data.tasks || [];
-        setTasks(allTasks.filter((t) => t.assigned_to === (user?._id || user?.id)));
+        setTasks(allTasks.filter((t) => (t.assignedTo || t.assigned_to) === (user?._id || user?.id)));
       } catch (err) {
         setError("Failed to fetch tasks");
       }

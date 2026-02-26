@@ -124,7 +124,7 @@ const ProjectTasks = (props) => {
       : isLeaderOrMentor;
   const isMember = myRole === "member";
   const visibleTasks = isMember
-    ? tasks.filter((t) => t.assigned_to === (user?._id || user?.id))
+    ? tasks.filter((t) => (t.assignedTo || t.assigned_to) === (user?._id || user?.id))
     : tasks;
 
   const getStatusIcon = (status) => {
@@ -374,7 +374,7 @@ const ProjectTasks = (props) => {
                 fetchTasks();
               };
               const assignedMember = members.find(
-                (m) => (m._id || m.id) === task.assigned_to
+                (m) => (m._id || m.id) === (task.assignedTo || task.assigned_to)
               );
               const RoleIcon = getRoleIcon(assignedMember?.role);
               const StatusIcon = getStatusIcon(task.status);
@@ -461,7 +461,7 @@ const ProjectTasks = (props) => {
                     </div>
 
                     <div className="flex items-center gap-4 pt-8 border-t border-gray-800/50">
-                      {isMember && task.status !== "done" && task.assigned_to === (user?._id || user?.id) && (
+                      {isMember && task.status !== "done" && (task.assignedTo || task.assigned_to) === (user?._id || user?.id) && (
                         <Button
                           onClick={() => handleMarkDone(taskId)}
                           disabled={loading}
