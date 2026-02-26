@@ -22,7 +22,9 @@ import {
   Clock,
   ExternalLink,
   Target,
-  Star
+  Star,
+  User,
+  Users
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
