@@ -20,7 +20,7 @@ exports.getUserPublicProfile = async (req, res) => {
 
 // Handles Step 1 & 2: Register user and send OTP
 exports.register = async (req, res) => {
-  const { fullName, email, password, role, interests } = req.body;
+  const { fullName, email, password, role, interests, mobile } = req.body;
   try {
     // First, delete any previous unverified attempts with the same email
     await User.deleteMany({ email, isVerified: false });
@@ -36,6 +36,7 @@ exports.register = async (req, res) => {
       passwordHash,
       role,
       interests: interests || [],
+      mobile: mobile || null,
       otpCode: otp,
       otpExpiresAt: otpExpires,
       isVerified: true, // Automatically verify for now
@@ -140,6 +141,7 @@ exports.getMe = async (req, res) => {
       interests: user.interests || [],
       skills: user.skills || [],
       bio: user.bio || "",
+      mobile: user.mobile || null,
       is_verified: user.isVerified,
       created_at: user.createdAt,
       updated_at: user.updatedAt,
@@ -177,7 +179,7 @@ exports.login = async (req, res) => {
 
 // Update user profile
 exports.updateMe = async (req, res) => {
-  const { full_name, role, interests, skills, bio, profileImage, resume } = req.body;
+  const { full_name, role, interests, skills, bio, profileImage, resume, mobile } = req.body;
   console.log("📝 Update profile request received");
   console.log("Profile image present:", !!profileImage);
   console.log("Resume present:", !!resume);
@@ -189,6 +191,7 @@ exports.updateMe = async (req, res) => {
       interests: interests || [],
       skills: skills || [],
       bio: bio || "",
+      mobile: mobile || null,
     };
 
     // If profile image is provided, upload to Cloudinary
@@ -231,7 +234,7 @@ exports.updateMe = async (req, res) => {
       req.user.id,
       updateData,
       { new: true, runValidators: true }
-    ).select("_id fullName role interests skills bio profileImageUrl resumeUrl");
+    ).select("_id fullName role interests skills bio profileImageUrl resumeUrl mobile");
 
     if (!user) {
       return res

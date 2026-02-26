@@ -21,6 +21,7 @@ import {
   Activity,
   Upload,
   FileText,
+  Phone,
 } from "lucide-react";
 
 import axiosInstance, { BASE_URL } from "../api/axiosInstance";
@@ -38,6 +39,7 @@ const Profile = () => {
   const [editForm, setEditForm] = useState({
     username: "",
     role: "",
+    mobile: "",
     interests: [],
     skills: [],
     bio: "",
@@ -55,6 +57,7 @@ const Profile = () => {
       setEditForm({
         username: user.full_name || "",
         role: user.role || "",
+        mobile: user.mobile || "",
         interests: user.interests || [],
         skills: user.skills || [],
         bio: user.bio || "",
@@ -74,6 +77,7 @@ const Profile = () => {
       const updateData = {
         full_name: editForm.username,
         role: editForm.role,
+        mobile: editForm.mobile,
         interests: editForm.interests,
         skills: editForm.skills,
         bio: editForm.bio,
@@ -627,6 +631,11 @@ const Profile = () => {
                 value={user.role}
                 highlight
               />
+              <ProfileInfo
+                icon={Phone}
+                label="Mobile Number"
+                value={user.mobile || "Not specified"}
+              />
               
               {/* Bio Display */}
               <div className="col-span-2">
@@ -890,6 +899,19 @@ const Profile = () => {
                     onChange={handleEditChange}
                     className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:border-orange-500 outline-none"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 mb-1">Mobile Number</label>
+                  <input
+                    type="text"
+                    name="mobile"
+                    value={editForm.mobile}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:border-orange-500 outline-none"
+                    placeholder="10-digit mobile number"
+                    pattern="\d{10}"
+                    title="Mobile number must be exactly 10 digits"
                   />
                 </div>
                 <div>

@@ -20,7 +20,8 @@ import {
   GraduationCap,
   Users,
   MoreHorizontal,
-  BookOpen
+  BookOpen,
+  Phone
 } from "lucide-react";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -112,6 +113,7 @@ const SignupPage = () => {
     fullName: "",
     email: "",
     password: "",
+    mobile: "",
     role: "Developer",
     interests: [],
     otp: "",
@@ -163,12 +165,18 @@ const SignupPage = () => {
     return password.length >= 6;
   };
 
+  const validateMobile = (mobile) => {
+    return /^\d{10}$/.test(mobile);
+  };
+
   const validateStep1 = () => {
     return formData.fullName.trim() && 
            formData.email && 
            validateEmail(formData.email) && 
            formData.password && 
-           validatePassword(formData.password);
+           validatePassword(formData.password) &&
+           formData.mobile &&
+           validateMobile(formData.mobile);
   };
 
   const validateStep2 = () => {
@@ -189,7 +197,7 @@ const SignupPage = () => {
 
     if (step === 1 && !validateStep1()) {
       setError("Please fill all fields correctly");
-      setTouched({ fullName: true, email: true, password: true });
+      setTouched({ fullName: true, email: true, password: true, mobile: true });
       return;
     }
 
@@ -207,6 +215,7 @@ const SignupPage = () => {
           password: formData.password,
           role: formData.role,
           interests: formData.interests,
+          mobile: formData.mobile,
         });
         
         if (response.data.skipVerification) {
@@ -299,6 +308,21 @@ const SignupPage = () => {
               touched={touched.email}
             />
             
+            <FormInput
+              label="Mobile Number"
+              name="mobile"
+              type="text"
+              value={formData.mobile}
+              onChange={handleChange}
+              onFocus={() => handleFocus('mobile')}
+              onBlur={() => handleBlur('mobile')}
+              placeholder="10-digit mobile number"
+              delay={0.35}
+              icon={Phone}
+              error={!formData.mobile ? "Mobile number is required" : !validateMobile(formData.mobile) ? "Must be exactly 10 digits" : ""}
+              touched={touched.mobile}
+            />
+
             <FormInput
               label="Password"
               name="password"
