@@ -182,9 +182,9 @@ const ProjectTask = () => {
                 </Link>
               </Button>
               <div>
-                <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">MISSION CONTROL</h1>
+                <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">Project Dashboard</h1>
                 <p className="text-gray-500 font-bold text-xs tracking-widest uppercase">
-                  PROJECT ID: {projectId?.substring(0, 8) || "UNKNOWN"} // STATUS: OPERATIONAL
+                  Project ID: {projectId?.substring(0, 8) || "Unknown"} | Status: Active
                 </p>
               </div>
             </div>
@@ -209,7 +209,7 @@ const ProjectTask = () => {
                   activeView === "overview" ? "bg-orange-500 text-white shadow-[0_4px_0_rgb(153,27,27)]" : "text-gray-500 hover:text-white"
                 )}
               >
-                <Users size={14} className="mr-2" /> Unit Overview
+                <Users size={14} className="mr-2" /> Members
               </Button>
             </div>
           </div>
@@ -243,10 +243,10 @@ const ProjectTask = () => {
                         </div>
                         <div>
                           <CardTitle className="text-2xl font-black italic tracking-tighter text-white uppercase">
-                            COMMAND INTERFACE
+                            Project Tasks
                           </CardTitle>
                           <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
-                            {isLeaderOrMentor ? "System Authorization Enabled" : "Read-Only Terminal"}
+                            {isLeaderOrMentor ? "Leader Access Enabled" : "Read-Only Access"}
                           </p>
                         </div>
                       </div>
@@ -284,7 +284,7 @@ const ProjectTask = () => {
                       <div className="p-2 bg-green-500/10 rounded-xl border border-green-500/20">
                         <UserCheck className="text-green-500 w-4 h-4" />
                       </div>
-                      <CardTitle className="text-sm font-black uppercase tracking-widest text-white italic">MY DEPLOYMENTS</CardTitle>
+                      <CardTitle className="text-sm font-black uppercase tracking-widest text-white italic">My Tasks</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 max-h-96 overflow-y-auto">
@@ -298,20 +298,20 @@ const ProjectTask = () => {
                     <div className="p-2 bg-orange-500/10 rounded-xl">
                       <Activity className="text-orange-500 w-5 h-5" />
                     </div>
-                    <CardTitle className="text-sm font-black uppercase tracking-widest text-white italic">TELEMETRY</CardTitle>
+                    <CardTitle className="text-sm font-black uppercase tracking-widest text-white italic">Overview</CardTitle>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-gray-800/50 rounded-2xl border border-gray-700/30">
                       <div className="text-3xl font-black italic tracking-tighter text-orange-500">
                         {members.length}
                       </div>
-                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">UNITS</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">Members</div>
                     </div>
                     <div className="text-center p-4 bg-gray-800/50 rounded-2xl border border-gray-700/30">
                       <div className="text-3xl font-black italic tracking-tighter text-blue-500">
                         {members.filter((m) => m.role === "mentor").length}
                       </div>
-                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">MASTERS</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">Leaders</div>
                     </div>
                   </div>
                 </Card>
@@ -334,10 +334,10 @@ const ProjectTask = () => {
                     </div>
                     <div>
                       <CardTitle className="text-2xl font-black italic tracking-tighter text-white uppercase">
-                        UNIT DIRECTORY
+                        Project Members
                       </CardTitle>
                       <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
-                        Active Personnel Status and Telemetry
+                        View and manage team members
                       </p>
                     </div>
                   </div>
@@ -361,7 +361,7 @@ const ProjectTask = () => {
                             </div>
 
                             <h3 className="text-lg font-black italic tracking-tighter text-white uppercase mb-2 group-hover:text-orange-500 transition-colors">
-                              {member.full_name || "Unknown Unit"}
+                              {member.full_name || "Unknown Member"}
                             </h3>
                             
                             <div className="mb-4">
@@ -392,10 +392,10 @@ const ProjectTask = () => {
                     <div className="text-center py-24 bg-gray-950/50 rounded-[3rem] border-2 border-dashed border-gray-800">
                       <Users size={48} className="text-gray-700 mx-auto mb-6" />
                       <h3 className="text-2xl font-black italic tracking-tighter text-gray-500 mb-2 uppercase">
-                        Zero Units Detected
+                        No Members Found
                       </h3>
                       <p className="text-gray-600 font-medium">
-                        Deployment matrix is currently vacant.
+                        There are no members in this project yet.
                       </p>
                     </div>
                   )}

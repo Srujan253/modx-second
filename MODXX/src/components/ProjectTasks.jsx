@@ -60,7 +60,7 @@ const ProjectTasks = (props) => {
   const [showForm, setShowForm] = useState(false);
 
   // Find the user's project role from members list
-  const myMembership = members.find((m) => m.id === user?.id);
+  const myMembership = members.find((m) => (m._id || m.id) === (user?._id || user?.id));
   const myRole = myMembership?.role;
 
   // Confirmation dialog state (fix misplaced line)
@@ -124,7 +124,7 @@ const ProjectTasks = (props) => {
       : isLeaderOrMentor;
   const isMember = myRole === "member";
   const visibleTasks = isMember
-    ? tasks.filter((t) => t.assigned_to === user.id)
+    ? tasks.filter((t) => t.assigned_to === (user?._id || user?.id))
     : tasks;
 
   const getStatusIcon = (status) => {
@@ -170,10 +170,10 @@ const ProjectTasks = (props) => {
           </div>
           <div>
             <h3 className="text-xl font-black italic tracking-tighter text-white uppercase">
-              {isMember ? "PERSONAL DEPLOYMENTS" : "GLOBAL OBJECTIVES"}
+              {isMember ? "My Tasks" : "All Tasks"}
             </h3>
             <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
-              {visibleTasks.length} {visibleTasks.length === 1 ? "ACTIVE SIGNAL" : "ACTIVE SIGNALS"} DETECTED
+              {visibleTasks.length} {visibleTasks.length === 1 ? "Active Task" : "Active Tasks"}
             </p>
           </div>
         </div>
@@ -183,7 +183,7 @@ const ProjectTasks = (props) => {
             onClick={() => setShowForm(!showForm)}
             className="bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest px-6 py-6 rounded-2xl shadow-[0_6px_0_rgb(153,27,27)] active:translate-y-1 active:shadow-none transition-all"
           >
-            <Plus size={18} className="mr-2" /> NEW OBJECTIVE
+            <Plus size={18} className="mr-2" /> NEW TASK
           </Button>
         )}
       </div>
@@ -223,10 +223,10 @@ const ProjectTasks = (props) => {
                 </div>
                 <div>
                   <h4 className="text-xl font-black italic tracking-tighter text-white uppercase">
-                    INITIALIZE NEW SECTOR
+                    Create New Task
                   </h4>
                   <p className="text-gray-500 font-bold text-[10px] tracking-widest uppercase mt-1">
-                    CONFIGURE MISSION PARAMETERS
+                    Fill out the task details below
                   </p>
                 </div>
               </div>
@@ -234,13 +234,13 @@ const ProjectTasks = (props) => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
-                    OBJECTIVE TITLE
+                    Task Title
                   </label>
                   <Input
                     name="title"
                     value={form.title}
                     onChange={handleChange}
-                    placeholder="ENTER MISSION PROTOCOLEN..."
+                    placeholder="Enter task title..."
                     className="h-14 bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold placeholder:text-gray-700 focus:border-orange-500/30 transition-all"
                     required
                   />
@@ -248,13 +248,13 @@ const ProjectTasks = (props) => {
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
-                    MISSION BRIEFING
+                    Task Description
                   </label>
                   <Textarea
                     name="description"
                     value={form.description}
                     onChange={handleChange}
-                    placeholder="DESCRIBE DEPLOYMENT PARAMETERS..."
+                    placeholder="Describe task details..."
                     className="bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold placeholder:text-gray-700 focus:border-orange-500/30 transition-all min-h-[120px]"
                     required
                   />
@@ -263,7 +263,7 @@ const ProjectTasks = (props) => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
-                      TERMINATION DATE
+                      Due Date
                     </label>
                     <Input
                       name="deadline"
@@ -277,7 +277,7 @@ const ProjectTasks = (props) => {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 ml-2">
-                      ASSIGN PERSONNEL
+                      Assign To
                     </label>
                     <Select
                       name="assigned_to"
@@ -286,9 +286,9 @@ const ProjectTasks = (props) => {
                       className="h-14 bg-gray-900/50 border-gray-800 rounded-2xl text-white font-bold focus:border-orange-500/30 transition-all px-4"
                       required
                     >
-                      <SelectItem value="">SELECT UNIT...</SelectItem>
+                      <SelectItem value="">Select member...</SelectItem>
                       {members.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
+                        <SelectItem key={m._id || m.id} value={m._id || m.id}>
                           {m.full_name}
                         </SelectItem>
                       ))}
@@ -305,11 +305,11 @@ const ProjectTasks = (props) => {
                     {loading ? (
                       <>
                         <Loader2 size={18} className="animate-spin mr-2" />
-                        INITIALIZING...
+                        CREATING...
                       </>
                     ) : (
                       <>
-                        <Plus size={18} className="mr-2" /> START MISSION
+                        <Plus size={18} className="mr-2" /> CREATE TASK
                       </>
                     )}
                   </Button>
@@ -320,7 +320,7 @@ const ProjectTasks = (props) => {
                     onClick={() => setShowForm(false)}
                     className="h-14 px-8 bg-gray-900 border-gray-800 text-gray-500 hover:text-white font-black uppercase tracking-widest rounded-2xl border-2 hover:border-gray-700 transition-all"
                   >
-                    ABORT
+                    CANCEL
                   </Button>
                 </div>
               </form>
@@ -352,34 +352,35 @@ const ProjectTasks = (props) => {
             <SearchX size={40} className="text-gray-700" />
           </div>
           <h3 className="text-3xl font-black italic tracking-tighter text-gray-500 mb-4 uppercase">
-            TARGETS UNREACHABLE
+            No Tasks Found
           </h3>
           <p className="text-gray-600 font-medium max-w-sm mx-auto">
             {showAssignForm
-              ? "No objectives found in this sector. Initiate first deployment sequence."
-              : "Zero assignments detected for your current unit profile."}
+              ? "There are no tasks for this project yet. Create one to get started."
+              : "You have no tasks assigned to you."}
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <AnimatePresence>
             {visibleTasks.map((task, index) => {
+              const taskId = task._id || task.id;
               const submitEdit = async (e) => {
                 e.preventDefault();
                 setEditLoading(true);
-                await onEditTask(task.id, editForm);
+                await onEditTask(taskId, editForm);
                 setEditLoading(false);
                 closeEdit();
                 fetchTasks();
               };
               const assignedMember = members.find(
-                (m) => m.id === task.assigned_to
+                (m) => (m._id || m.id) === task.assigned_to
               );
               const RoleIcon = getRoleIcon(assignedMember?.role);
               const StatusIcon = getStatusIcon(task.status);
               // Edit modal logic
               const openEdit = () => {
-                setEditTaskId(task.id);
+                setEditTaskId(taskId);
                 setEditForm({
                   title: task.title,
                   description: task.description,
@@ -401,7 +402,7 @@ const ProjectTasks = (props) => {
               };
               // ...existing code...
               return (
-                <React.Fragment key={task.id}>
+                <React.Fragment key={taskId}>
                   <Card className="bg-gray-900 border-gray-800 p-8 hover:border-orange-500/30 transition-all duration-500 group relative overflow-hidden mb-6">
                     <div className="absolute top-0 left-0 w-1 h-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-all" />
                     
@@ -434,9 +435,9 @@ const ProjectTasks = (props) => {
                           <User size={18} />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-1">UNIT ASSIGNED</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-1">Assigned To</p>
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-bold">{assignedMember?.full_name || "UNKNOWN UNIT"}</span>
+                            <span className="text-white font-bold">{assignedMember?.full_name || "Unassigned"}</span>
                             {assignedMember?.role && (
                               <Badge variant="outline" className="text-[8px] h-4 bg-orange-500/5 text-orange-500 border-orange-500/20">
                                 {assignedMember.role}
@@ -451,23 +452,23 @@ const ProjectTasks = (props) => {
                           <Calendar size={18} />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-1">TERMINATION</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-1">Due Date</p>
                           <span className="text-white font-bold">
-                            {task.deadline ? new Date(task.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "INDETERMINATE"}
+                            {task.deadline ? new Date(task.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No Due Date"}
                           </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4 pt-8 border-t border-gray-800/50">
-                      {isMember && task.status !== "done" && task.assigned_to === user.id && (
+                      {isMember && task.status !== "done" && task.assigned_to === (user?._id || user?.id) && (
                         <Button
-                          onClick={() => handleMarkDone(task.id)}
+                          onClick={() => handleMarkDone(taskId)}
                           disabled={loading}
                           className="bg-green-500 hover:bg-green-600 text-white font-black uppercase tracking-widest px-6 h-10 rounded-xl transition-all"
                         >
                           {loading ? <Loader2 className="animate-spin mr-2" size={14} /> : <CheckCircle size={14} className="mr-2" />}
-                          MARCAR CONCLUÍDO
+                          MARK AS DONE
                         </Button>
                       )}
                       
@@ -478,21 +479,21 @@ const ProjectTasks = (props) => {
                             onClick={openEdit}
                             className="bg-blue-500/5 text-blue-500 border-blue-500/20 hover:bg-blue-500 hover:text-white font-black uppercase tracking-widest text-[10px] px-6 h-10 rounded-xl transition-all"
                           >
-                            <FileText size={14} className="mr-2" /> RECONFIG
+                            <FileText size={14} className="mr-2" /> Edit
                           </Button>
                           <Button
                             variant="outline"
-                            onClick={() => setConfirmDeleteId(task.id)}
+                            onClick={() => setConfirmDeleteId(taskId)}
                             className="bg-red-500/5 text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white font-black uppercase tracking-widest text-[10px] px-6 h-10 rounded-xl transition-all"
                           >
-                            <AlertCircle size={14} className="mr-2" /> PURGE
+                            <AlertCircle size={14} className="mr-2" /> Delete
                           </Button>
                         </div>
                       )}
                     </div>
                   </Card>
                   {/* Edit Modal */}
-                  {editTaskId === task.id && (
+                  {editTaskId === taskId && (
                     <div className="fixed inset-0 z-50 flex justify-center items-start bg-black/40">
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 40 }}
@@ -586,7 +587,7 @@ const ProjectTasks = (props) => {
                     </div>
                   )}
                   {/* Delete Confirmation Modal */}
-                  {confirmDeleteId === task.id && (
+                  {confirmDeleteId === taskId && (
                     <div className="fixed inset-0 z-50 flex justify-center items-center bg-black/40">
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
@@ -607,7 +608,7 @@ const ProjectTasks = (props) => {
                             whileTap={{ scale: 0.98 }}
                             type="button"
                             onClick={async () => {
-                              await onDeleteTask(task.id);
+                              await onDeleteTask(taskId);
                               setConfirmDeleteId(null);
                               fetchTasks();
                             }}

@@ -23,7 +23,7 @@ const MyTaskPanel = ({ projectId }) => {
         const allTasks = Array.isArray(res.data)
           ? res.data
           : res.data.tasks || [];
-        setTasks(allTasks.filter((t) => t.assigned_to === user.id));
+        setTasks(allTasks.filter((t) => t.assigned_to === (user?._id || user?.id)));
       } catch (err) {
         setError("Failed to fetch tasks");
       }
@@ -40,7 +40,7 @@ const MyTaskPanel = ({ projectId }) => {
         status: "done",
       });
       setTasks((prev) =>
-        prev.map((t) => (t.id === taskId ? { ...t, status: "done" } : t))
+        prev.map((t) => ((t._id || t.id) === taskId ? { ...t, status: "done" } : t))
       );
     } catch (err) {
       setError("Failed to update task");
@@ -73,7 +73,7 @@ const MyTaskPanel = ({ projectId }) => {
         <div className="space-y-3">
           {tasks.map((task) => (
             <Card
-              key={task.id}
+              key={task._id || task.id}
               className="bg-gray-800/20 border-gray-800/50 hover:border-orange-500/30 transition-all group overflow-hidden"
             >
               <CardContent className="p-4">
@@ -104,7 +104,7 @@ const MyTaskPanel = ({ projectId }) => {
 
                 {task.status !== "done" && (
                   <Button
-                    onClick={() => handleMarkDone(task.id)}
+                    onClick={() => handleMarkDone(task._id || task.id)}
                     disabled={loading}
                     variant="outline"
                     className="w-full h-8 bg-green-500/5 text-green-500 border-green-500/20 hover:bg-green-500 hover:text-white font-black uppercase tracking-widest text-[9px] rounded-lg"
