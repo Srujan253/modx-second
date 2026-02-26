@@ -10,8 +10,8 @@ import {
   Briefcase,
   Sparkles,
   SearchX,
-  cn,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAuth } from "../../context/AuthContext";
 import ProjectCard from "../../components/ProjectCard";
 import apiClient, { BASE_URL } from "../../api/axiosInstance";
