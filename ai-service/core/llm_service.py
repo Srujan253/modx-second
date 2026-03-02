@@ -1,10 +1,9 @@
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from core.config import GEMINI_API_KEY
 from core.model_manager import ModelManager
 from services import scraper, db_query_service, vector_store
 import json
-
-genai.configure(api_key=GEMINI_API_KEY)
 
 # --- 1. DEFINE THE SYSTEM PROMPT ---
 system_prompt = """
@@ -123,13 +122,14 @@ def generate_answer(query):
 
             # Send the tool's response back to the model for a final, natural language answer
             final_response = chat.send_message(
-                genai.protos.Content(
-                    parts=[genai.protos.Part(
-                        function_response=genai.protos.FunctionResponse(
+                types.Content(
+                    parts=[types.Part(
+                        function_response=types.FunctionResponse(
                             name=tool_name,
                             response={'result': tool_response_str}
                         )
-                    )]
+                    )],
+                    role="tool"
                 )
             )
             return final_response.candidates[0].content.parts[0].text

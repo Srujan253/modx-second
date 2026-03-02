@@ -1,13 +1,10 @@
 # File: services/scraper.py
 import requests
 from bs4 import BeautifulSoup
-import google.generativeai as genai
-from core.config import GEMINI_API_KEY
 from core.model_manager import ModelManager
 import concurrent.futures
 
-# Configure the Gemini client for summarization
-genai.configure(api_key=GEMINI_API_KEY)
+# Initialize summarization model via ModelManager (handles genai client internally)
 summarization_model = ModelManager()
 
 # --- Helper Functions ---

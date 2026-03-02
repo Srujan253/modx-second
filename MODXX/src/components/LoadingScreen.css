@@ -1,0 +1,103 @@
+/* ——— Overlay ——— */
+.modx-loader-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    opacity: 1;
+    visibility: visible;
+}
+
+.modx-loader-overlay.modx-loader-fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* ——— Content container ——— */
+.modx-loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+}
+
+/* ——— Logo ——— */
+.modx-loader-logo {
+    width: 180px;
+    height: auto;
+    border-radius: 12px;
+    /* pulse glow effect on the dark background */
+    animation: modx-logo-pulse 1.6s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 0px rgba(180, 180, 180, 0));
+}
+
+@keyframes modx-logo-pulse {
+    0% {
+        transform: scale(0.92);
+        filter: drop-shadow(0 0 0px rgba(200, 200, 200, 0));
+        opacity: 0.75;
+    }
+
+    100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 22px rgba(200, 200, 200, 0.35));
+        opacity: 1;
+    }
+}
+
+/* ——— Progress bar ——— */
+.modx-loader-bar-track {
+    width: 200px;
+    height: 3px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.modx-loader-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #555 0%, #fff 100%);
+    animation: modx-bar-grow 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes modx-bar-grow {
+    0% {
+        width: 0%;
+    }
+
+    60% {
+        width: 75%;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+/* ——— Tagline ——— */
+.modx-loader-tagline {
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    font-family: 'Inter', 'Outfit', system-ui, sans-serif;
+    margin: 0;
+    animation: modx-fade-in-up 0.8s ease 0.3s both;
+}
+
+@keyframes modx-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

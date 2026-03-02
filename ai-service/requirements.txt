@@ -2,7 +2,7 @@ fastapi
 uvicorn
 pydantic
 python-dotenv
-google-generativeai
+google-genai
 chromadb
 pymongo
 beautifulsoup4

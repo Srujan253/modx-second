@@ -6,7 +6,8 @@ switches between different Gemini models when one fails due to quota limits
 or availability issues.
 """
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from core.config import GEMINI_API_KEY
 import logging
 
@@ -14,8 +15,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configure Gemini API
-genai.configure(api_key=GEMINI_API_KEY)
+# Create Gemini client
+_client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Model priority list (ordered by preference and quota availability)
 MODEL_FALLBACK_ORDER = [
@@ -66,20 +67,10 @@ class ModelManager:
         raise RuntimeError("All Gemini models failed to initialize. Please check your API key and quota.")
     
     def _create_model(self, model_name):
-        """Create a GenerativeModel instance."""
-        if self.tools and self.system_instruction:
-            return genai.GenerativeModel(
-                model_name=model_name,
-                tools=self.tools,
-                system_instruction=self.system_instruction
-            )
-        elif self.system_instruction:
-            return genai.GenerativeModel(
-                model_name=model_name,
-                system_instruction=self.system_instruction
-            )
-        else:
-            return genai.GenerativeModel(model_name=model_name)
+        """Build a config dict for use with the new client API."""
+        # In google.genai the model name + config are passed at call time,
+        # so we just store the name; _client is used in generate_content.
+        return model_name  # model name string used with _client
     
     def get_model(self):
         """
@@ -90,48 +81,55 @@ class ModelManager:
         """
         return self.current_model
     
-    def generate_content(self, *args, **kwargs):
+    def generate_content(self, prompt, **kwargs):
         """
         Generate content with automatic fallback on failure.
-        
-        This method tries the current model first, and if it fails due to
-        quota or availability issues, it automatically tries the next model
-        in the fallback list.
         """
         last_exception = None
-        
+        config_kwargs = {}
+        if self.system_instruction:
+            config_kwargs['system_instruction'] = self.system_instruction
+        if self.tools:
+            config_kwargs['tools'] = self.tools
+
         # Try current model first
         try:
-            return self.current_model.generate_content(*args, **kwargs)
+            return _client.models.generate_content(
+                model=self.current_model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
+            )
         except Exception as e:
             logger.warning(f"Model {self.current_model_name} failed: {str(e)[:100]}")
             last_exception = e
-        
+
         # Try remaining models in fallback order
         current_index = MODEL_FALLBACK_ORDER.index(self.current_model_name)
         for model_name in MODEL_FALLBACK_ORDER[current_index + 1:]:
             try:
                 logger.info(f"Switching to fallback model: {model_name}")
-                self.current_model = self._create_model(model_name)
                 self.current_model_name = model_name
-                
-                result = self.current_model.generate_content(*args, **kwargs)
+                self.current_model = model_name
+                result = _client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
+                )
                 logger.info(f"✅ Successfully switched to model: {model_name}")
                 return result
             except Exception as e:
                 logger.warning(f"Fallback model {model_name} failed: {str(e)[:100]}")
                 last_exception = e
                 continue
-        
-        # If all models fail, raise the last exception
+
         raise last_exception
     
     def start_chat(self, **kwargs):
         """
         Start a chat session with automatic fallback support.
-        
+
         Returns:
-            ChatSession: A chat session wrapper with fallback support
+            ChatSessionWrapper: A chat session wrapper with fallback support
         """
         return ChatSessionWrapper(self, **kwargs)
 
@@ -139,48 +137,54 @@ class ModelManager:
 class ChatSessionWrapper:
     """Wrapper for chat sessions that provides fallback support."""
     
-    def __init__(self, model_manager, **kwargs):
+    def __init__(self, model_manager, history=None, **kwargs):
         """
-        Initialize the chat session wrapper.
-        
-        Args:
-            model_manager: The ModelManager instance
-            **kwargs: Arguments to pass to start_chat()
+        Initialize the chat session wrapper using the new google.genai client.
         """
         self.model_manager = model_manager
+        self.history = history or []
         self.chat_kwargs = kwargs
-        self.chat = self.model_manager.get_model().start_chat(**kwargs)
-    
-    def send_message(self, *args, **kwargs):
+        self._create_chat_session()
+
+    def _create_chat_session(self):
+        """Create a new chat session with the current model."""
+        config_kwargs = {}
+        if self.model_manager.system_instruction:
+            config_kwargs['system_instruction'] = self.model_manager.system_instruction
+        if self.model_manager.tools:
+            config_kwargs['tools'] = self.model_manager.tools
+        self.chat = _client.chats.create(
+            model=self.model_manager.current_model_name,
+            history=self.history,
+            config=types.GenerateContentConfig(**config_kwargs) if config_kwargs else None
+        )
+
+    def send_message(self, message, **kwargs):
         """
         Send a message with automatic fallback on failure.
         """
         last_exception = None
-        
-        # Try current chat session first
+
         try:
-            return self.chat.send_message(*args, **kwargs)
+            return self.chat.send_message(message)
         except Exception as e:
             logger.warning(f"Chat session failed: {str(e)[:100]}")
             last_exception = e
-        
+
         # Try to recreate chat with fallback models
         current_index = MODEL_FALLBACK_ORDER.index(self.model_manager.current_model_name)
         for model_name in MODEL_FALLBACK_ORDER[current_index + 1:]:
             try:
                 logger.info(f"Recreating chat session with fallback model: {model_name}")
-                self.model_manager.current_model = self.model_manager._create_model(model_name)
                 self.model_manager.current_model_name = model_name
-                
-                # Recreate chat session with new model
-                self.chat = self.model_manager.get_model().start_chat(**self.chat_kwargs)
-                result = self.chat.send_message(*args, **kwargs)
+                self.model_manager.current_model = model_name
+                self._create_chat_session()
+                result = self.chat.send_message(message)
                 logger.info(f"✅ Successfully switched chat to model: {model_name}")
                 return result
             except Exception as e:
                 logger.warning(f"Fallback chat with {model_name} failed: {str(e)[:100]}")
                 last_exception = e
                 continue
-        
-        # If all models fail, raise the last exception
+
         raise last_exception

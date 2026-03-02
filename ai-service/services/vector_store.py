@@ -1,4 +1,4 @@
-import google.generativeai as genai
+from google import genai
 import chromadb
 from core.config import (
     EMBEDDING_MODEL, 
@@ -8,7 +8,7 @@ from core.config import (
     GEMINI_API_KEY
 )
 
-genai.configure(api_key=GEMINI_API_KEY)
+_client = genai.Client(api_key=GEMINI_API_KEY)
 
 client = chromadb.CloudClient(
     tenant=CHROMA_TENANT,
@@ -23,14 +23,17 @@ def get_gemini_embeddings(texts):
     if isinstance(texts, str):
         texts = [texts]
     
-    # Process in batches if necessary (Gemini allows multiple)
     try:
-        results = genai.embed_content(
+        result = _client.models.embed_content(
             model=EMBEDDING_MODEL,
-            content=texts,
-            task_type="retrieval_document" if len(texts) > 1 else "retrieval_query"
+            contents=texts,
         )
-        return results['embedding']
+        # New SDK returns a list of ContentEmbedding objects
+        if isinstance(result.embeddings, list):
+            if len(result.embeddings) == 1:
+                return result.embeddings[0].values
+            return [e.values for e in result.embeddings]
+        return []
     except Exception as e:
         print(f"Error getting Gemini embeddings: {e}")
         return []

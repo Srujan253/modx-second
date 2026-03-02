@@ -3,7 +3,8 @@ import ProjectMessagesList from "./pages/ProjectMessagesList";
 import ProjectMessages from "./pages/ProjectMessages";
 import ApplyJoinSystem from "./pages/ApplyJoinSystem";
 import GeminiDreamTeam from "./pages/GeminiDreamTeam";
-import React from "react";
+import React, { useState } from "react";
+import LoadingScreen from "./components/LoadingScreen";
 import {
   BrowserRouter as Router,
   Routes,
@@ -137,10 +138,15 @@ function AppContent() {
 }
 
 function App() {
+  const [loading, setLoading] = useState(true);
+
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <>
+      {loading && <LoadingScreen onDone={() => setLoading(false)} />}
+      <Router>
+        <AppContent />
+      </Router>
+    </>
   );
 }
 
